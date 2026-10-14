@@ -11,7 +11,7 @@
 기존 proposal, 구현 검증, 대표 회의 자동화 시나리오를 재사용했다.
 
 - Evidence 1: 기존 `problem-solving.yaml/html` proposal이 5-field 계약과 사람 승인 handoff를 제품 핵심으로 정의한다.
-- Evidence 2: 브라우저 검증에서 Goal 직접 수정값이 handoff에 반영되고 `MCP 연결됨 · 3 tools`가 표시된다.
+- Evidence 2: 브라우저 검증에서 Goal 직접 수정값이 handoff에 반영되고 `MCP 연결됨 · 4 tools`가 표시된다.
 - Evidence 3: MCP discovery, 구조화, 검증, handoff 호출이 로컬 endpoint에서 모두 응답한다.
 - Value score: 테스트 재실행 비용을 낮추고 회귀 오류를 조기에 잡는 품질 가치가 구현 비용보다 크므로 3.0 이상으로 판단한다.
 - Ambiguity score: 2/10. 테스트 경계와 대표 시나리오가 확정되었다.
@@ -27,7 +27,7 @@
 Phase: `phases/workbench-quality/index.json`
 
 1. Contract unit tests: 초안 생성, 누락 필드, 직접 수정값, handoff readiness를 검증한다.
-2. MCP integration tests: discovery, 3개 tool, 정적 UI와 HTTP endpoint의 동시 제공을 검증한다.
+2. MCP integration tests: discovery, 4개 tool, 정적 UI와 HTTP endpoint의 동시 제공을 검증한다.
 3. Browser E2E and screenshots: MCP 연결, 구조화 단계 직접 수정, 승인 차단·완료 흐름과 화면 캡처를 검증한다.
 
 ## 5. Acceptance criteria

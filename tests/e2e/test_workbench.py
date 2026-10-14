@@ -65,17 +65,25 @@ def chromium_executable():
     return executable
 
 
-def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_executable):
+def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_executable, tmp_path):
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True, executable_path=chromium_executable)
         page = browser.new_page()
         page.goto(f"{workbench_server}/apps/workbench/demo/mvp.html")
 
-        expect(page.locator("#mcpStatus")).to_have_text("MCP 연결됨 · 3 tools")
+        expect(page.locator("#mcpStatus")).to_have_text("MCP 연결됨 · 4 tools")
+        reference_path = tmp_path / "decisions.html"
+        reference_path.write_text("<h1>Decision</h1><p>Review the draft by Friday.</p>", encoding="utf-8")
         page.locator("#fileInput").set_input_files({
-            "name": "decisions.txt",
-            "mimeType": "text/plain",
-            "buffer": b"Decision: review the draft by Friday.",
+            "name": "decisions.html",
+            "mimeType": "text/html",
+            "buffer": b"<h1>Decision</h1><p>Review the draft by Friday.</p>",
+        })
+        page.get_by_role("textbox", name="decisions.html 절대경로").fill(str(reference_path))
+        page.locator("#fileInput").set_input_files({
+            "name": "uploaded.html",
+            "mimeType": "text/html",
+            "buffer": b"<h2>Uploaded decision</h2><p><strong>Ready</strong></p>",
         })
         page.get_by_role("button", name="문제 구조화하기").click()
         expect(page.get_by_text("구조화 단계 · 직접 입력")).to_be_visible()
@@ -90,7 +98,11 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
         expect(page.locator("#handoffText")).to_contain_text("## Request")
         expect(page.locator("#handoffText")).to_contain_text("회의가 끝난 뒤 결정사항과 반복 업무")
         expect(page.locator("#handoffText")).to_contain_text("meeting-notes.md")
-        expect(page.locator("#handoffText")).to_contain_text("Decision: review the draft by Friday.")
+        expect(page.locator("#handoffText")).to_contain_text("# Decision")
+        expect(page.locator("#handoffText")).not_to_contain_text("<h1>Decision</h1>")
+        expect(page.locator("#handoffText")).to_contain_text(f"Path: {reference_path}")
+        expect(page.locator("#handoffText")).to_contain_text("## Uploaded decision")
+        expect(page.locator("#handoffText")).not_to_contain_text("<h2>Uploaded decision</h2>")
         expect(page.locator("#handoffText")).not_to_contain_text("/work on meeting-summary")
 
         page.get_by_role("button", name="handoff 준비 완료").click()

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -74,6 +75,7 @@ test("plugin exposes Claude Code and Codex-compatible package metadata", () => {
 
   const skill = fs.readFileSync(path.join(PLUGIN, "skills/ax-workflow/SKILL.md"), "utf8");
   assert.match(skill, /ax_structure_problem/);
+  assert.match(skill, /ax_read_reference/);
   assert.match(skill, /ax_validate_contract/);
   assert.match(skill, /ax_create_handoff/);
   assert.match(skill, /apps\/workbench\/mcp\/server\.mjs/);
@@ -81,6 +83,35 @@ test("plugin exposes Claude Code and Codex-compatible package metadata", () => {
   assert.match(skill, /server\/discover/);
   assert.match(skill, /MCP 연결됨/);
   assert.doesNotMatch(skill, /work on meeting-summary/);
+});
+
+test("plugin read tool converts an authorized local HTML path", async () => {
+  const server = startStdioServer();
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "ax-workbench-"));
+  const filePath = path.join(directory, "notes.html");
+  fs.writeFileSync(filePath, "<h1>Notes</h1><p><strong>Ready</strong> for review.</p>", "utf8");
+
+  try {
+    const response = await server.request(1, "tools/call", {
+      name: "ax_read_reference",
+      arguments: { path: filePath }
+    });
+    const value = response.result.structuredContent;
+    assert.equal(value.path, filePath);
+    assert.equal(value.format, "markdown");
+    assert.match(value.content, /# Notes/);
+    assert.match(value.content, /\*\*Ready\*\* for review\./);
+
+    const uploaded = await server.request(2, "tools/call", {
+      name: "ax_read_reference",
+      arguments: { name: "uploaded.html", content: "<h2>Uploaded</h2><p><strong>Ready</strong></p>" }
+    });
+    assert.match(uploaded.result.structuredContent.content, /## Uploaded/);
+    assert.doesNotMatch(uploaded.result.structuredContent.content, /<h2>|<p>/);
+  } finally {
+    server.child.kill();
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test("plugin stdio MCP initializes and preserves request, refs, and edited contract", async () => {
@@ -91,6 +122,7 @@ test("plugin stdio MCP initializes and preserves request, refs, and edited contr
 
     const list = await server.request(2, "tools/list");
     assert.deepEqual(list.result.tools.map((tool) => tool.name), [
+      "ax_read_reference",
       "ax_structure_problem",
       "ax_validate_contract",
       "ax_create_handoff"
@@ -101,7 +133,7 @@ test("plugin stdio MCP initializes and preserves request, refs, and edited contr
       arguments: {
         request: "회의 후 결정사항과 반복 업무를 정리합니다.",
         refs: [
-          { name: "meeting-notes.md", content: "결정: 금요일까지 초안을 검토합니다." },
+          { name: "meeting-notes.md", path: "/tmp/meeting-notes.md", content: "결정: 금요일까지 초안을 검토합니다." },
           { name: "slack-thread.txt", content: "담당: 민지" }
         ]
       }
@@ -119,6 +151,7 @@ test("plugin stdio MCP initializes and preserves request, refs, and edited contr
     });
     assert.match(handoff.result.structuredContent.markdown, /## Request/);
     assert.match(handoff.result.structuredContent.markdown, /meeting-notes\.md/);
+    assert.match(handoff.result.structuredContent.markdown, /Path: \/tmp\/meeting-notes\.md/);
     assert.match(handoff.result.structuredContent.markdown, /결정: 금요일까지 초안을 검토합니다\./);
     assert.match(handoff.result.structuredContent.markdown, /사용자가 직접 수정한 목표/);
     assert.match(handoff.result.structuredContent.markdown, /review-only/);

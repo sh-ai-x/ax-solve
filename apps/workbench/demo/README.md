@@ -14,9 +14,9 @@ Goal, Constraints, Success criteria, Anti-goals, Acceptance rubric을 사용자�
 플러그인 설치·Skill 사용법과 기능별 명세는 프로젝트 루트의
 [README](../../README.md#claude-codecodex-%ED%98%B8%ED%99%98-plugin)를 참고한다.
 
-문제 입력 단계의 원문과 참고자료(파일명·내용)는 구조화 단계 상단에 전달되고,
+문제 입력 단계의 원문과 참고자료(파일명·절대경로·내용)는 구조화 단계 상단에 전달되고,
 같은 값이 검토용 handoff의 `Request`·`References`에 다시 포함된다. 파일 내용은
-브라우저에서 읽어 로컬 MCP 또는 로컬 fallback handoff에만 전달된다.
+브라우저에서 읽고, 절대경로는 사용자가 직접 입력한 경우에만 로컬 MCP 또는 로컬 fallback handoff에 전달된다.
 
 ## 실행
 
@@ -46,8 +46,9 @@ node apps/workbench/mcp/server.mjs
 http://127.0.0.1:8787/apps/workbench/demo/mvp.html
 ```
 
-서버는 정적 MVP와 `POST /mcp`를 함께 제공한다. 제공하는 도구는 다음 세 가지다.
+서버는 정적 MVP와 `POST /mcp`를 함께 제공한다. 제공하는 도구는 다음 네 가지다.
 
+- `ax_read_reference`: 사용자가 승인한 절대경로 또는 업로드 HTML을 읽고 Markdown으로 변환
 - `ax_structure_problem`: 문제와 참고자료를 5-field 초안으로 구조화
 - `ax_validate_contract`: 사용자가 직접 수정한 5-field 계약 검증
 - `ax_create_handoff`: 검토된 계약을 Markdown handoff 문서로 생성

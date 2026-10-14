@@ -1,25 +1,58 @@
 import readline from "node:readline";
+import fs from "node:fs/promises";
+import path from "node:path";
 import {
   FIELD_KEYS,
   createHandoff,
   deriveContract,
+  htmlToMarkdown,
   validateContract
 } from "./contract.mjs";
 
 const MCP_VERSION = "2025-06-18";
+const MAX_REFERENCE_BYTES = 1_000_000;
 const referenceSchema = {
   oneOf: [
     { type: "string" },
     {
       type: "object",
       additionalProperties: false,
-      required: ["name"],
-      properties: { name: { type: "string" }, content: { type: "string" } }
+      anyOf: [
+        { required: ["path"] },
+        { required: ["name", "content"] }
+      ],
+      properties: { name: { type: "string" }, path: { type: "string" }, content: { type: "string" } }
     }
   ]
 };
 
 const tools = [
+  {
+    name: "ax_read_reference",
+    description: "사용자가 승인한 절대경로 또는 업로드 본문을 읽고 HTML을 Markdown으로 변환한다.",
+    inputSchema: {
+      type: "object",
+      additionalProperties: false,
+      oneOf: [
+        {
+          required: ["path"],
+          properties: { path: { type: "string", description: "사용자가 승인하고 입력한 절대경로" } }
+        },
+        {
+          required: ["name", "content"],
+          properties: {
+            name: { type: "string", description: "업로드된 참고자료 파일명" },
+            content: { type: "string", description: "사용자가 업로드한 HTML 본문" }
+          }
+        }
+      ],
+      properties: {
+        path: { type: "string" },
+        name: { type: "string" },
+        content: { type: "string" }
+      }
+    }
+  },
   {
     name: "ax_structure_problem",
     description: "문제 원문과 참고자료를 AX Workbench의 5-field 계약 초안으로 구조화한다.",
@@ -29,7 +62,7 @@ const tools = [
       required: ["request"],
       properties: {
         request: { type: "string", minLength: 15, description: "사용자가 해결하려는 문제" },
-        refs: { type: "array", items: referenceSchema, description: "참고자료 이름과 내용" }
+        refs: { type: "array", items: referenceSchema, description: "참고자료 이름, 경로와 내용" }
       }
     }
   },
@@ -81,11 +114,43 @@ function normalizeRefs(refs) {
     if (ref && typeof ref === "object") {
       return {
         name: String(ref.name || "reference"),
+        path: typeof ref.path === "string" ? ref.path : String(ref.path ?? ""),
         content: typeof ref.content === "string" ? ref.content : String(ref.content ?? "")
       };
     }
     return String(ref);
   }) : [];
+}
+
+async function readReference(args = {}) {
+  if (typeof args.content === "string" && !Object.prototype.hasOwnProperty.call(args, "path")) {
+    if (Buffer.byteLength(args.content, "utf8") > MAX_REFERENCE_BYTES) throw new Error("reference content is too large");
+    return {
+      name: String(args.name || "reference.html"),
+      path: "",
+      content: htmlToMarkdown(args.content),
+      format: "markdown"
+    };
+  }
+
+  const referencePath = args.path;
+  if (typeof referencePath !== "string" || !path.isAbsolute(referencePath)) {
+    throw new Error("reference path must be an absolute path");
+  }
+
+  const filePath = path.resolve(referencePath);
+  const stat = await fs.stat(filePath);
+  if (!stat.isFile()) throw new Error("reference path must point to a file");
+  if (stat.size > MAX_REFERENCE_BYTES) throw new Error("reference file is too large");
+
+  const raw = await fs.readFile(filePath, "utf8");
+  const isHtml = /\.html?$/i.test(filePath);
+  return {
+    name: path.basename(filePath),
+    path: filePath,
+    content: isHtml ? htmlToMarkdown(raw) : raw,
+    format: isHtml ? "markdown" : "text"
+  };
 }
 
 function rpcResult(id, result) {
@@ -101,6 +166,12 @@ function send(message) {
 }
 
 async function callTool(name, args = {}) {
+  if (name === "ax_read_reference") {
+    // shortcut: exact user-supplied paths on localhost; add an allowlist/consent token before remote use.
+    const value = await readReference(args);
+    return textResult(value);
+  }
+
   if (name === "ax_structure_problem") {
     if (typeof args.request !== "string" || args.request.trim().length < 15) {
       return textResult("request must be at least 15 characters", true);

@@ -9,7 +9,7 @@ Skill을 하나로 묶은 로컬 plugin입니다.
   사용자 수정 → 검증 → review-only handoff
 - `setup` skill: 로컬 plugin 로딩 안내
 - `ax_workbench` stdio MCP server
-- `ax_structure_problem`, `ax_validate_contract`, `ax_create_handoff`
+- `ax_read_reference`, `ax_structure_problem`, `ax_validate_contract`, `ax_create_handoff`
 
 ## Local test
 
@@ -42,8 +42,9 @@ Claude Code에서 Skill을 직접 호출하려면 다음을 사용합니다.
 ```
 
 사용 흐름은 `Request → Structure → Human edit → Validate → Review-only handoff`이며,
-MCP가 제공하는 세 도구는 `ax_structure_problem`, `ax_validate_contract`,
-`ax_create_handoff`입니다.
+MCP가 제공하는 네 도구는 `ax_read_reference`, `ax_structure_problem`,
+`ax_validate_contract`, `ax_create_handoff`입니다. `ax_read_reference`는 사용자가
+승인한 로컬 경로나 업로드한 HTML 참고자료를 Markdown으로 변환합니다.
 
 Skill을 프로젝트 루트에서 실행하면 `apps/workbench/mcp/server.mjs`를 확인하고,
 필요한 경우 `scripts/ax-workbench-local.mjs`로 detached 실행한 뒤

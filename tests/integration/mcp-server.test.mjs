@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import test, { after, before } from "node:test";
+import os from "node:os";
+import path from "node:path";
 import { createServer } from "../../apps/workbench/mcp/server.mjs";
 
 let server;
@@ -32,10 +35,48 @@ test("MCP discovery exposes the supported protocol and tools", async () => {
 
   const list = await rpc("tools/list");
   assert.deepEqual(list.result.tools.map((tool) => tool.name), [
+    "ax_read_reference",
     "ax_structure_problem",
     "ax_validate_contract",
     "ax_create_handoff"
   ]);
+});
+
+test("read reference tool converts local HTML to Markdown", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "ax-workbench-"));
+  const filePath = path.join(directory, "meeting.html");
+  await writeFile(filePath, "<h1>회의 결정</h1><p><strong>금요일</strong>까지 검토합니다.</p>", "utf8");
+
+  try {
+    const response = await rpc("tools/call", {
+      name: "ax_read_reference",
+      arguments: { path: filePath }
+    });
+    const value = response.result.structuredContent;
+    assert.equal(value.name, "meeting.html");
+    assert.equal(value.path, filePath);
+    assert.equal(value.format, "markdown");
+    assert.match(value.content, /# 회의 결정/);
+    assert.match(value.content, /\*\*금요일\*\*까지 검토합니다\./);
+
+    const rejected = await rpc("tools/call", {
+      name: "ax_read_reference",
+      arguments: { path: "meeting.html" }
+    });
+    assert.equal(rejected.result.isError, true);
+    assert.match(rejected.result.content[0].text, /absolute path/);
+
+    const uploaded = await rpc("tools/call", {
+      name: "ax_read_reference",
+      arguments: { name: "uploaded.html", content: "<h2>업로드 결정</h2><p><strong>검토 완료</strong></p>" }
+    });
+    assert.equal(uploaded.result.structuredContent.path, "");
+    assert.match(uploaded.result.structuredContent.content, /## 업로드 결정/);
+    assert.match(uploaded.result.structuredContent.content, /\*\*검토 완료\*\*/);
+    assert.doesNotMatch(uploaded.result.structuredContent.content, /<h2>|<p>/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test("structure tool returns a contract that the UI can edit", async () => {
@@ -44,7 +85,7 @@ test("structure tool returns a contract that the UI can edit", async () => {
     arguments: {
       request: "회의 후 결정사항과 반복 업무를 자동 정리합니다.",
       refs: [
-        { name: "meeting-notes.md", content: "결정: 금요일까지 초안을 검토합니다." },
+        { name: "meeting-notes.md", path: "/tmp/meeting-notes.md", content: "결정: 금요일까지 초안을 검토합니다." },
         { name: "slack-thread.txt", content: "담당: 민지" }
       ]
     }
@@ -52,6 +93,7 @@ test("structure tool returns a contract that the UI can edit", async () => {
 
   const value = response.result.structuredContent;
   assert.equal(value.refs.length, 2);
+  assert.equal(value.refs[0].path, "/tmp/meeting-notes.md");
   assert.equal(value.refs[0].content, "결정: 금요일까지 초안을 검토합니다.");
   assert.match(value.contract.goal, /회의 후 결정사항/);
   assert.match(value.contract.constraints, /slack-thread\.txt/);
@@ -76,11 +118,12 @@ test("validate and handoff tools preserve edited values", async () => {
     name: "ax_create_handoff",
     arguments: {
       request: "회의 정리",
-      refs: [{ name: "notes.md", content: "결정: 다음 주에 다시 확인" }],
+      refs: [{ name: "notes.md", path: "/tmp/notes.md", content: "결정: 다음 주에 다시 확인" }],
       contract
     }
   });
   assert.match(handoff.result.structuredContent.markdown, /직접 수정한 목표/);
+  assert.match(handoff.result.structuredContent.markdown, /Path: \/tmp\/notes\.md/);
   assert.match(handoff.result.structuredContent.markdown, /결정: 다음 주에 다시 확인/);
   assert.match(handoff.result.structuredContent.markdown, /ready for human review/);
 });

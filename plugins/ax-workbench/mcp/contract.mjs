@@ -14,11 +14,53 @@ export const FIELD_LABELS = {
   acceptance_rubric: "Acceptance rubric"
 };
 
+function decodeHtmlEntities(value) {
+  const named = { amp: "&", apos: "'", gt: ">", lt: "<", nbsp: " ", quot: '"' };
+  return value.replace(/&(#x[\da-f]+|#\d+|[a-z]+);/gi, (match, entity) => {
+    if (entity[0] === "#") {
+      const code = entity[1].toLowerCase() === "x" ? parseInt(entity.slice(2), 16) : Number(entity.slice(1));
+      return Number.isNaN(code) ? match : String.fromCodePoint(code);
+    }
+    return named[entity.toLowerCase()] || match;
+  });
+}
+
+function inlineHtmlToMarkdown(value) {
+  return decodeHtmlEntities(value
+    .replace(/<a\b[^>]*\bhref\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_, href, label) => `[${inlineHtmlToMarkdown(label)}](${href})`)
+    .replace(/<(strong|b)\b[^>]*>/gi, "**")
+    .replace(/<\/(strong|b)>/gi, "**")
+    .replace(/<(em|i)\b[^>]*>/gi, "*")
+    .replace(/<\/(em|i)>/gi, "*")
+    .replace(/<br\s*\/?>(?=\s*)/gi, "\n")
+    .replace(/<[^>]+>/g, ""))
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
+}
+
+export function htmlToMarkdown(html) {
+  const markdown = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<pre\b[^>]*>([\s\S]*?)<\/pre>/gi, (_, value) => `\n\`\`\`\n${inlineHtmlToMarkdown(value)}\n\`\`\`\n`)
+    .replace(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi, (_, level, value) => `\n${"#".repeat(Number(level))} ${inlineHtmlToMarkdown(value)}\n`)
+    .replace(/<li\b[^>]*>([\s\S]*?)<\/li>/gi, (_, value) => `\n- ${inlineHtmlToMarkdown(value)}\n`)
+    .replace(/<hr\s*\/?>/gi, "\n---\n")
+    .replace(/<\/?(?:p|div|section|article|header|footer|main|blockquote|ul|ol|table|thead|tbody|tr|td|th)\b[^>]*>/gi, "\n");
+
+  return inlineHtmlToMarkdown(markdown)
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function normalizeReference(ref) {
   if (typeof ref === "string") return { name: ref, content: "" };
   if (!ref || typeof ref !== "object") return { name: String(ref ?? "reference"), content: "" };
   return {
     name: String(ref.name || "reference"),
+    path: typeof ref.path === "string" ? ref.path : String(ref.path ?? ""),
     content: typeof ref.content === "string" ? ref.content : String(ref.content ?? "")
   };
 }
@@ -61,9 +103,10 @@ export function createHandoff({ request = "", refs = [], contract = {} } = {}) {
   const referenceLines = refs.length
     ? refs.flatMap((ref) => {
       const reference = normalizeReference(ref);
-      if (!reference.content) return [`- ${reference.name}`];
+      const pathLine = reference.path ? [`  Path: ${reference.path}`] : [];
+      if (!reference.content) return [`- ${reference.name}`, ...pathLine];
       const fence = referenceContentFence(reference.content);
-      return [`- ${reference.name}`, `  Content:`, `  ${fence}text`, reference.content, `  ${fence}`];
+      return [`- ${reference.name}`, ...pathLine, `  Content:`, `  ${fence}text`, reference.content, `  ${fence}`];
     })
     : ["- problem statement"];
   const contractLines = FIELD_KEYS.flatMap((key) => [

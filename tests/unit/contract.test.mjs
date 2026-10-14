@@ -4,8 +4,23 @@ import {
   FIELD_KEYS,
   createHandoff,
   deriveContract,
+  htmlToMarkdown,
   validateContract
 } from "../../apps/workbench/mcp/contract.mjs";
+
+test("htmlToMarkdown keeps useful structure and removes executable markup", () => {
+  const markdown = htmlToMarkdown(`
+    <script>alert('remove')</script>
+    <h1>회의 결정</h1>
+    <p>초안은 <strong>금요일</strong>까지 <a href="/review">검토</a>합니다.</p>
+    <ul><li>담당자 지정</li><li>승인 상태 확인</li></ul>
+  `);
+
+  assert.match(markdown, /# 회의 결정/);
+  assert.match(markdown, /초안은 \*\*금요일\*\*까지 \[검토\]\(\/review\)합니다\./);
+  assert.match(markdown, /- 담당자 지정/);
+  assert.doesNotMatch(markdown, /script|alert/);
+});
 
 test("deriveContract creates a meeting workflow contract from request and references", () => {
   const contract = deriveContract("회의 후 결정사항과 반복 업무를 정리하고 싶습니다.", ["meeting-notes.md"]);
@@ -65,7 +80,7 @@ test("createHandoff preserves edited contract values and readiness", () => {
 
 test("createHandoff includes reference material content", () => {
   const handoff = createHandoff({
-    refs: [{ name: "meeting-notes.md", content: "결정: 금요일까지 초안을 검토합니다." }],
+    refs: [{ name: "meeting-notes.md", path: "/tmp/meeting-notes.md", content: "결정: 금요일까지 초안을 검토합니다." }],
     contract: {
       goal: "목표",
       constraints: "제약",
@@ -76,5 +91,20 @@ test("createHandoff includes reference material content", () => {
   });
 
   assert.match(handoff.markdown, /- meeting-notes\.md/);
+  assert.match(handoff.markdown, /Path: \/tmp\/meeting-notes\.md/);
   assert.match(handoff.markdown, /결정: 금요일까지 초안을 검토합니다\./);
+});
+
+test("createHandoff disambiguates references with the same name by path", () => {
+  const handoff = createHandoff({
+    refs: [
+      { name: "notes.md", path: "/tmp/team-a/notes.md", content: "팀 A" },
+      { name: "notes.md", path: "/tmp/team-b/notes.md", content: "팀 B" }
+    ]
+  });
+
+  assert.match(handoff.markdown, /Path: \/tmp\/team-a\/notes\.md/);
+  assert.match(handoff.markdown, /Path: \/tmp\/team-b\/notes\.md/);
+  assert.match(handoff.markdown, /팀 A/);
+  assert.match(handoff.markdown, /팀 B/);
 });
