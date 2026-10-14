@@ -87,14 +87,14 @@
     .source-context-head span { color: #8293aa; font-size: 9px; }
     .source-request { color: var(--ink); font-size: 11px; line-height: 1.5; margin: 0; }
     .source-refs { color: var(--muted); font-size: 10px; line-height: 1.45; margin: 7px 0 0; }
-    .reference-editor { border: 1px solid #dbe5f3; background: #f7faff; border-radius: 8px; padding: 12px 13px; margin-bottom: 14px; }
-    .reference-editor-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
-    .reference-editor-head strong { font-size: 10px; color: var(--blue); }
-    .reference-editor-head span { color: #8293aa; font-size: 9px; }
-    .reference-edit { margin-top: 9px; }
+    .reference-editor { border: 1px solid #cbdcf8; background: #f7faff; border-radius: 8px; padding: 16px; margin-bottom: 18px; }
+    .reference-editor-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 11px; }
+    .reference-editor-head strong { font-size: 12px; color: var(--blue); }
+    .reference-editor-head span { color: #8293aa; font-size: 10px; }
+    .reference-edit { margin-top: 13px; }
     .reference-edit:first-of-type { margin-top: 0; }
-    .reference-edit label { display: block; color: #60728a; font-size: 10px; font-weight: 800; margin-bottom: 5px; }
-    .reference-edit textarea { width: 100%; min-height: 92px; resize: vertical; border: 1px solid #dce4ee; border-radius: 6px; background: #fff; color: var(--ink); padding: 9px 10px; font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; outline: 0; }
+    .reference-edit label { display: block; color: #60728a; font-size: 11px; font-weight: 800; margin-bottom: 6px; }
+    .reference-edit textarea { width: 100%; min-height: 150px; resize: vertical; border: 1px solid #dce4ee; border-radius: 6px; background: #fff; color: var(--ink); padding: 11px 12px; font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; outline: 0; }
     .reference-edit textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59, 117, 237, .1); }
     .flow { border: 1px solid var(--line); background: #fbfcfe; border-radius: 8px; padding: 17px 13px 13px; display: flex; align-items: center; gap: 7px; min-height: 154px; }
     .flow-node { width: 107px; min-height: 84px; background: #fff; border: 1px solid #dce5ef; border-top: 3px solid var(--green); border-radius: 8px; padding: 10px; box-shadow: 0 5px 12px rgba(30, 50, 75, .06); }
@@ -168,6 +168,7 @@
             <p class="source-request" id="requestPreview"></p>
             <p class="source-refs" id="referencePreview"></p>
           </div>
+          <div class="reference-editor" id="referenceEditor"><div class="reference-editor-head"><strong>참고자료 Markdown 직접 수정</strong><span>수정값은 handoff와 초안에 반영됩니다.</span></div></div>
           <p class="field-guide">각 항목은 handoff의 계약이 됩니다. 비워두면 실행 준비가 되지 않으며, 원문 근거·담당자·기한·승인 조건을 구체적으로 적어주세요.</p>
           <div class="field" data-field="goal"><div class="field-top"><strong>Goal · 목표</strong><small></small></div><textarea aria-label="Goal" placeholder="무엇을 해결하거나 자동화할지 입력하세요."></textarea></div>
           <div class="field" data-field="constraints"><div class="field-top"><strong>Constraints · 제약</strong><small></small></div><textarea aria-label="Constraints" placeholder="유지해야 할 형식, 보안, 데이터 경계를 입력하세요."></textarea></div>
@@ -178,7 +179,6 @@
 
         <article class="card workflow">
           <div class="card-title"><div><h2>최소 workflow</h2><p class="sub">5-field 결과에서 파생된 검토 가능한 실행 흐름입니다.</p></div><span class="badge blue">Local preview</span></div>
-          <div class="reference-editor" id="referenceEditor"><div class="reference-editor-head"><strong>참고자료 Markdown 직접 수정</strong><span>수정값은 handoff와 초안에 반영됩니다.</span></div></div>
           <div class="flow"><div class="flow-node"><i>01</i><b>자료 읽기</b><span>원문에서 사실 추출</span></div><span class="arrow">→</span><div class="flow-node current"><i>02</i><b>업무 정리</b><span id="workflowMiddle">결정·담당·기한 구조화</span></div><span class="arrow">→</span><div class="flow-node next"><i>03</i><b>사람 승인</b><span>handoff 전 최종 확인</span></div></div>
           <div class="workflow-foot"><span>자동 실행 0개 · 사람 승인 1회</span><b id="workflowStatus">✓ safe to review</b></div>
           <div class="output"><div class="output-head"><div><h3>검토용 handoff 문서</h3><p>플러그인 없이 사람이 검토·복사·다운로드하는 문서 초안</p></div><span class="badge green" id="handoffBadge">Draft</span></div><div class="code" id="handoffText"></div><div class="download-row"><button type="button" id="copy">handoff 복사</button><button type="button" id="downloadMd">Markdown 다운로드</button><button type="button" id="downloadJson">JSON 다운로드</button></div></div>
