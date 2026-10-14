@@ -1,0 +1,46 @@
+{
+  "adapter_capabilities": {
+    "executor_close": true,
+    "executor_enroll": true,
+    "session_close": true,
+    "session_enroll": true
+  },
+  "bounded_errors": [],
+  "collected_at": "2026-10-14T12:06:48.804922Z",
+  "contract_version": "effectiveness-collection-v1",
+  "counts": {
+    "closed": 11,
+    "conflicting_terminal": 0,
+    "distinct_units": 11,
+    "enrolled": 11,
+    "missing_start": 0,
+    "missing_terminal": 0,
+    "paired": 11,
+    "success": 11,
+    "unexpected_units": 0,
+    "unresolved": 0
+  },
+  "cutoff": "2026-10-14T12:06:48.804922Z",
+  "findings": [],
+  "journal_hash": "29c4aee8523bb624c4590b252923204af23d7aef06c0a3772fa8b1d36e4eabb2",
+  "journal_seq": 158,
+  "origin": "runtime",
+  "policy": {
+    "coverage_threshold": 0.95
+  },
+  "quality_availability": {
+    "first_pass": "unavailable",
+    "learning": "unavailable",
+    "prevention": "unavailable",
+    "recovery": "unavailable",
+    "stability": "unavailable"
+  },
+  "ratios": {
+    "coverage": 1.0,
+    "success": 1.0
+  },
+  "readiness": "READY",
+  "retention_floor": "20261014",
+  "root_id": "/Users/sanghee/dev/ax-solve",
+  "schema_version": 1
+}

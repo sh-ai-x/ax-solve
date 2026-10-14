@@ -1,0 +1,20 @@
+{
+  "name": "ax-solve-local",
+  "interface": {
+    "displayName": "AX Solve Local"
+  },
+  "plugins": [
+    {
+      "name": "ax-workbench",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ax-workbench"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

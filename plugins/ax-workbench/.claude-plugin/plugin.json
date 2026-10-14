@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "ax-workbench",
+  "displayName": "AX Workbench",
+  "version": "0.1.0",
+  "description": "문제 원문을 5-field 계약과 검토용 handoff로 구조화하는 로컬 워크플로우",
+  "author": {
+    "name": "sanghee"
+  },
+  "license": "MIT",
+  "skills": "./skills/"
+}

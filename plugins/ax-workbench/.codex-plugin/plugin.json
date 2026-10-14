@@ -1,0 +1,12 @@
+{
+  "name": "ax-workbench",
+  "version": "0.1.0",
+  "description": "문제 원문을 5-field 계약과 검토용 handoff로 구조화하는 로컬 워크플로우",
+  "skills": "./skills/",
+  "mcpServers": "./.codex.mcp.json",
+  "extensions": {
+    "com.openai": {
+      "onboardingSkill": "./skills/setup/SKILL.md"
+    }
+  }
+}

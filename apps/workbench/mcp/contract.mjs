@@ -1,0 +1,80 @@
+export const FIELD_KEYS = [
+  "goal",
+  "constraints",
+  "success_criteria",
+  "anti_goals",
+  "acceptance_rubric"
+];
+
+export const FIELD_LABELS = {
+  goal: "Goal",
+  constraints: "Constraints",
+  success_criteria: "Success criteria",
+  anti_goals: "Anti-goals",
+  acceptance_rubric: "Acceptance rubric"
+};
+
+export function deriveContract(request, refs = []) {
+  const subject = request.includes("회의") ? "회의 후 결정사항과 반복 업무" : "입력된 업무 문제";
+  const source = refs.length ? refs.join(", ") : "입력된 문제 설명";
+
+  return {
+    goal: `${subject}를 원문 근거와 함께 자동으로 정리한다.`,
+    constraints: `${source}를 기준으로 초안을 만들고, 사람이 검토하기 전에는 외부 전송이나 업무 확정을 하지 않는다.`,
+    success_criteria: "10분 안에 실행 목록, 담당자, 기한, 근거를 확인할 수 있다.",
+    anti_goals: "자동으로 메일을 발송하거나 담당자에게 업무를 확정하지 않는다.",
+    acceptance_rubric: "원문 근거, 담당자, 기한, 승인 상태가 결과에 포함되고 사람이 수정할 수 있다."
+  };
+}
+
+export function validateContract(contract = {}) {
+  const missing = FIELD_KEYS.filter((key) => {
+    return typeof contract[key] !== "string" || !contract[key].trim();
+  });
+
+  return {
+    complete: missing.length === 0,
+    missing,
+    fields: Object.fromEntries(FIELD_KEYS.map((key) => [
+      key,
+      { label: FIELD_LABELS[key], filled: !missing.includes(key) }
+    ]))
+  };
+}
+
+export function createHandoff({ request = "", refs = [], contract = {} } = {}) {
+  const validation = validateContract(contract);
+  const referenceLines = refs.length ? refs.map((ref) => `- ${ref}`) : ["- problem statement"];
+  const contractLines = FIELD_KEYS.flatMap((key) => [
+    `### ${FIELD_LABELS[key]}`,
+    contract[key] || "(needs input)",
+    ""
+  ]);
+
+  const markdown = [
+    "# Workflow handoff",
+    "",
+    "## Request",
+    request || "(empty)",
+    "",
+    "## References",
+    ...referenceLines,
+    "",
+    "## Contract",
+    ...contractLines,
+    "## Verification",
+    "- owner",
+    "- due_date",
+    "- evidence",
+    "- human_approval",
+    "",
+    "## Readiness",
+    validation.complete ? "ready for human review" : `blocked: ${validation.missing.join(", ")}`,
+    ""
+  ].join("\n");
+
+  return {
+    markdown,
+    json: { request, refs, contract, validation }
+  };
+}

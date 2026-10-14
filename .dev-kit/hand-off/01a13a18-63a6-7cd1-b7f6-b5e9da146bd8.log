@@ -1,0 +1,17 @@
+Bash	sed -n '1,240p' /Users/sanghee/.codex/plugins/cache/ax-solve-local/ax-workbench/
+Bash	test -f apps/workbench/mcp/server.mjs && echo present || echo absent
+Bash	test -f apps/workbench/demo/mvp.html && echo present || echo absent
+Bash	rg -n "server/discover|ax_structure_problem|MCP 연결됨|8787" apps/workbench/mcp/ser
+Bash	curl -sS -i --max-time 3 http://127.0.0.1:8787/apps/workbench/demo/mvp.html
+Bash	nohup node apps/workbench/mcp/server.mjs >/private/tmp/ax-workbench-mcp.log 2>&1
+Bash	sed -n '1,120p' /private/tmp/ax-workbench-mcp.log
+Bash	curl -sS -i --max-time 5 http://127.0.0.1:8787/apps/workbench/demo/mvp.html
+Bash	curl -sS --max-time 5 -X POST http://127.0.0.1:8787/mcp -H 'content-type: applic
+Bash	node apps/workbench/mcp/server.mjs
+Bash	curl -sS -i --max-time 5 http://127.0.0.1:8787/apps/workbench/demo/mvp.html
+Bash	curl -sS --max-time 5 -X POST http://127.0.0.1:8787/mcp -H 'content-type: applic
+Bash	sed -n '1,210p' apps/workbench/mcp/server.mjs
+Bash	rg -n -C 8 "function connectMcp|function callMcpTool|server/discover|MCP 연결" app
+Bash	open http://127.0.0.1:8787/apps/workbench/demo/mvp.html
+Bash	curl -sS --max-time 5 -X POST http://127.0.0.1:8787/mcp -H 'content-type: applic
+Bash	curl -sS --max-time 5 -X POST http://127.0.0.1:8787/mcp -H 'content-type: applic

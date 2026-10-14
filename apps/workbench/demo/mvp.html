@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Workbench — Local MVP</title>
+  <style>
+    :root {
+      --ink: #17212b; --muted: #718096; --line: #e5eaf0; --bg: #f7f9fb; --panel: #fff;
+      --blue: #3b75ed; --blue-soft: #edf3ff; --green: #209772; --green-soft: #e8f7f1;
+      --orange: #d77a35; --red: #c95361;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink); background: var(--bg);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 920px; background: var(--bg); }
+    button, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .top { height: 68px; background: #fff; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 42px; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .mark { width: 28px; height: 28px; border-radius: 8px; background: #172536; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 12px; }
+    .brand b { font-size: 14px; }
+    .brand span { display: block; color: var(--muted); font-size: 10px; margin-top: 1px; }
+    .local { font-size: 11px; color: #5377bd; background: var(--blue-soft); border-radius: 20px; padding: 6px 10px; font-weight: 700; }
+    .local.ok { color: var(--green); background: var(--green-soft); }
+    .local.offline { color: var(--orange); background: #fff4e8; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 42px 38px 60px; }
+    .intro { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
+    .eyebrow { font-size: 10px; color: var(--blue); font-weight: 800; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 10px; }
+    h1 { font-size: 29px; letter-spacing: -.045em; margin: 0; line-height: 1.15; }
+    .intro p { color: var(--muted); font-size: 13px; margin: 10px 0 0; line-height: 1.6; }
+    .example { font-size: 11px; color: var(--muted); white-space: nowrap; }
+    .example b { color: var(--ink); }
+    .steps { display: flex; align-items: center; margin: 30px 0 17px; }
+    .step { display: flex; align-items: center; gap: 8px; color: #a0aab7; background: transparent; border: 0; padding: 0; font-size: 11px; font-weight: 700; }
+    .step:not(:last-child)::after { content: ""; height: 1px; width: 88px; background: #dce3eb; margin: 0 15px; }
+    .step.active { color: var(--blue); }
+    .step.done { color: var(--green); }
+    .n { width: 23px; height: 23px; border: 1px solid #d5dde7; border-radius: 50%; display: grid; place-items: center; font-size: 10px; }
+    .active .n { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .done .n { background: var(--green-soft); border-color: #a6ddca; }
+    .step-note { color: #9aa7b6; font-weight: 400; margin-left: 2px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 6px 20px rgba(24, 42, 65, .035); }
+    .input-card, .contract, .workflow { padding: 24px; }
+    .card-title { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+    .card-title h2 { font-size: 14px; margin: 0; }
+    .card-title p { font-size: 11px; color: var(--muted); margin: 4px 0 0; }
+    .badge { font-size: 10px; font-weight: 800; border-radius: 20px; padding: 5px 8px; background: #f0f3f7; color: #718095; white-space: nowrap; }
+    .badge.blue { background: var(--blue-soft); color: var(--blue); }
+    .badge.green { background: var(--green-soft); color: var(--green); }
+    .label { display: block; color: #8694a5; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; font-weight: 800; margin: 14px 0 7px; }
+    .textarea { width: 100%; min-height: 116px; resize: vertical; border: 1px solid #dce4ee; border-radius: 8px; background: #fbfcfe; color: var(--ink); padding: 13px 14px; font-size: 13px; line-height: 1.6; outline: 0; }
+    .textarea:focus, .field textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59, 117, 237, .1); }
+    .chips { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+    .chip { border: 1px solid #dde5ee; background: #fff; border-radius: 6px; padding: 7px 9px; color: #65758a; font-size: 11px; }
+    .chip:hover { border-color: #aebed5; }
+    .form-footer, .actions { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 20px; }
+    .hint { color: #9aa6b4; font-size: 10px; }
+    .error { color: var(--red); font-size: 11px; min-height: 16px; margin-top: 8px; }
+    .primary, .ghost { border-radius: 8px; padding: 11px 16px; font-size: 12px; font-weight: 800; }
+    .primary { background: var(--blue); color: #fff; border: 0; box-shadow: 0 5px 12px rgba(59, 117, 237, .2); }
+    .primary:hover { background: #2f65d5; }
+    .primary:disabled { cursor: not-allowed; opacity: .5; box-shadow: none; }
+    .ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); font-weight: 700; }
+    .result { display: none; }
+    .result.show { display: block; }
+    .input-view.hide { display: none; }
+    .result-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 16px; }
+    .sub { font-size: 11px; color: var(--muted); margin: 5px 0 18px; }
+    .field { border: 1px solid var(--line); border-radius: 7px; padding: 10px 11px; margin-top: 8px; background: #fcfdff; }
+    .field.complete { border-left: 3px solid var(--green); }
+    .field.missing { border-color: #efc79f; background: #fffaf5; border-left: 3px solid var(--orange); }
+    .field-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .field strong { font-size: 11px; }
+    .field small { color: var(--green); font-weight: 800; font-size: 9px; }
+    .field.missing small { color: var(--orange); }
+    .field textarea { width: 100%; resize: vertical; min-height: 54px; border: 1px solid transparent; background: transparent; color: var(--ink); font-size: 11px; line-height: 1.5; margin-top: 5px; padding: 5px 3px; outline: 0; }
+    .field textarea::placeholder { color: #a4afbd; }
+    .field-guide { font-size: 10px; color: var(--muted); line-height: 1.45; margin: 0 0 12px; }
+    .source-context { border: 1px solid #dbe5f3; background: #f7faff; border-radius: 8px; padding: 12px 13px; margin-bottom: 14px; }
+    .source-context-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .source-context-head strong { font-size: 10px; color: var(--blue); }
+    .source-context-head span { color: #8293aa; font-size: 9px; }
+    .source-request { color: var(--ink); font-size: 11px; line-height: 1.5; margin: 0; }
+    .source-refs { color: var(--muted); font-size: 10px; line-height: 1.45; margin: 7px 0 0; }
+    .flow { border: 1px solid var(--line); background: #fbfcfe; border-radius: 8px; padding: 17px 13px 13px; display: flex; align-items: center; gap: 7px; min-height: 154px; }
+    .flow-node { width: 107px; min-height: 84px; background: #fff; border: 1px solid #dce5ef; border-top: 3px solid var(--green); border-radius: 8px; padding: 10px; box-shadow: 0 5px 12px rgba(30, 50, 75, .06); }
+    .flow-node.current { border-top-color: var(--blue); }
+    .flow-node.next { border-top-color: var(--orange); }
+    .flow-node i { font-style: normal; font-size: 11px; color: var(--blue); }
+    .flow-node b { display: block; font-size: 10px; margin: 9px 0 4px; }
+    .flow-node span { display: block; font-size: 9px; color: var(--muted); line-height: 1.4; }
+    .arrow { color: #aab7c8; font-size: 16px; }
+    .workflow-foot { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .workflow-foot span { font-size: 10px; color: var(--muted); }
+    .workflow-foot b { font-size: 10px; color: var(--green); white-space: nowrap; }
+    .output { margin-top: 16px; padding: 17px 20px; background: #172536; border-radius: 8px; color: #fff; }
+    .output-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .output h3 { font-size: 12px; margin: 0 0 5px; }
+    .output p { font-size: 10px; color: #aebed3; margin: 0; }
+    .code { color: #dce8fa; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; line-height: 1.55; margin-top: 14px; white-space: pre-wrap; }
+    .download-row { display: flex; gap: 7px; margin-top: 15px; }
+    .download-row button { background: #2a3b52; color: #e8f0fc; border: 1px solid #40536c; border-radius: 6px; padding: 7px 9px; font-size: 10px; }
+    .success { color: var(--green); font-size: 11px; font-weight: 800; min-height: 14px; }
+    .toast { position: fixed; bottom: 22px; right: 24px; background: #172536; color: #fff; border-radius: 8px; padding: 11px 14px; font-size: 11px; opacity: 0; transform: translateY(6px); transition: .2s; pointer-events: none; }
+    .toast.show { opacity: 1; transform: none; }
+    @media (max-width: 980px) {
+      body { min-width: 0; }
+      .top { padding: 0 22px; }
+      .wrap { padding: 32px 22px; }
+      .intro { display: block; }
+      .example { margin-top: 12px; }
+      .result-grid { grid-template-columns: 1fr; }
+      .step:not(:last-child)::after { width: 40px; margin: 0 8px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><div class="mark">A</div><div><b>AX Workbench</b><span>problem-solving studio</span></div></div>
+    <span class="local" id="mcpStatus">MCP 연결 확인 중…</span>
+  </header>
+
+  <main class="wrap">
+    <div class="intro">
+      <div><div class="eyebrow">Minimum viable workflow</div><h1>문제를 실행 가능한 workflow로 바꾸기</h1><p>구조화 단계에서 5개 항목을 직접 입력·수정하고, MCP handoff로 연결합니다.</p></div>
+      <div class="example">Example&nbsp; <b>회의 기록 → 반복 업무 자동화</b></div>
+    </div>
+
+    <div class="steps" aria-label="MVP workflow steps">
+      <button class="step active" data-step="request"><span class="n">1</span>문제 입력<span class="step-note">1분</span></button>
+      <button class="step" data-step="frame"><span class="n">2</span>구조화<span class="step-note">5 fields</span></button>
+      <button class="step" data-step="handoff"><span class="n">3</span>실행 handoff<span class="step-note">복사·다운로드</span></button>
+    </div>
+
+    <section class="card input-view" id="inputView">
+      <div class="input-card">
+        <div class="card-title"><div><h2>무엇을 해결하고 싶나요?</h2><p>한 문장으로 쓰고, 이해에 필요한 자료의 이름만 붙입니다.</p></div><span class="badge blue">Step 1 / 3</span></div>
+        <label class="label" for="request">Problem statement</label>
+        <textarea class="textarea" id="request">회의가 끝난 뒤 결정사항과 반복 업무를 매번 수동으로 정리하고 있어요. 회의록과 Slack 대화를 바탕으로 다음 업무를 자동화하고 싶습니다.</textarea>
+        <label class="label" for="fileInput">Reference materials</label>
+        <div class="chips" id="fileList"><button class="chip" type="button" data-remove="meeting-notes.md">＋ meeting-notes.md</button><button class="chip" type="button" data-remove="slack-thread.txt">＋ slack-thread.txt</button><button class="chip" type="button" id="addFile">＋ 자료 추가</button></div>
+        <input id="fileInput" type="file" multiple hidden>
+        <div class="error" id="inputError" role="alert"></div>
+        <div class="form-footer"><span class="hint" id="saveHint">초안은 이 브라우저에만 저장됩니다.</span><button class="primary" type="button" id="analyze">문제 구조화하기&nbsp; →</button></div>
+      </div>
+    </section>
+
+    <section class="result" id="resultView">
+      <div class="result-grid">
+        <article class="card contract">
+          <div class="card-title"><div><h2>구조화 단계 · 직접 입력</h2><p class="sub">MCP가 만든 초안을 검토하고, 각 항목을 사용자가 직접 수정합니다.</p></div><span class="badge blue" id="contractBadge">직접 입력</span></div>
+          <div class="source-context" aria-live="polite">
+            <div class="source-context-head"><strong>← 문제 입력에서 전달됨</strong><span>Step 1 원문</span></div>
+            <p class="source-request" id="requestPreview"></p>
+            <p class="source-refs" id="referencePreview"></p>
+          </div>
+          <p class="field-guide">각 항목은 handoff의 계약이 됩니다. 비워두면 실행 준비가 되지 않으며, 원문 근거·담당자·기한·승인 조건을 구체적으로 적어주세요.</p>
+          <div class="field" data-field="goal"><div class="field-top"><strong>Goal · 목표</strong><small></small></div><textarea aria-label="Goal" placeholder="무엇을 해결하거나 자동화할지 입력하세요."></textarea></div>
+          <div class="field" data-field="constraints"><div class="field-top"><strong>Constraints · 제약</strong><small></small></div><textarea aria-label="Constraints" placeholder="유지해야 할 형식, 보안, 데이터 경계를 입력하세요."></textarea></div>
+          <div class="field" data-field="success_criteria"><div class="field-top"><strong>Success criteria · 성공 기준</strong><small></small></div><textarea aria-label="Success criteria" placeholder="언제 성공으로 판단할지 측정 가능하게 입력하세요."></textarea></div>
+          <div class="field" data-field="anti_goals"><div class="field-top"><strong>Anti-goals · 하지 않을 일</strong><small></small></div><textarea aria-label="Anti-goals" placeholder="자동 실행하지 않을 일이나 범위를 입력하세요."></textarea></div>
+          <div class="field" data-field="acceptance_rubric"><div class="field-top"><strong>Acceptance rubric · 승인 기준</strong><small></small></div><textarea aria-label="Acceptance rubric" placeholder="결과에 반드시 포함되어야 할 근거·담당자·기한·상태를 입력하세요."></textarea></div>
+        </article>
+
+        <article class="card workflow">
+          <div class="card-title"><div><h2>최소 workflow</h2><p class="sub">5-field 결과에서 파생된 검토 가능한 실행 흐름입니다.</p></div><span class="badge blue">Local preview</span></div>
+          <div class="flow"><div class="flow-node"><i>01</i><b>자료 읽기</b><span>원문에서 사실 추출</span></div><span class="arrow">→</span><div class="flow-node current"><i>02</i><b>업무 정리</b><span id="workflowMiddle">결정·담당·기한 구조화</span></div><span class="arrow">→</span><div class="flow-node next"><i>03</i><b>사람 승인</b><span>handoff 전 최종 확인</span></div></div>
+          <div class="workflow-foot"><span>자동 실행 0개 · 사람 승인 1회</span><b id="workflowStatus">✓ safe to review</b></div>
+          <div class="output"><div class="output-head"><div><h3>검토용 handoff 문서</h3><p>플러그인 없이 사람이 검토·복사·다운로드하는 문서 초안</p></div><span class="badge green" id="handoffBadge">Draft</span></div><div class="code" id="handoffText"></div><div class="download-row"><button type="button" id="copy">handoff 복사</button><button type="button" id="downloadMd">Markdown 다운로드</button><button type="button" id="downloadJson">JSON 다운로드</button></div></div>
+          <div class="actions"><button class="ghost" type="button" id="back">← 다시 입력</button><div><span class="success" id="success" role="status"></span><button class="primary" type="button" id="approve">handoff 준비 완료</button></div></div>
+        </article>
+      </div>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const STORAGE_KEY = "ax-workbench-local-mvp-v2";
+    const fieldKeys = ["goal", "constraints", "success_criteria", "anti_goals", "acceptance_rubric"];
+    const state = { request: "", refs: [], contract: {}, approved: false };
+    let mcpConnected = false;
+    let mcpRequestId = 0;
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => [...document.querySelectorAll(selector)];
+
+    function notify(message) {
+      const toast = $("#toast"); toast.textContent = message; toast.classList.add("show");
+      clearTimeout(notify.timer); notify.timer = setTimeout(() => toast.classList.remove("show"), 2400);
+    }
+
+    function setMcpStatus(mode, message) {
+      const badge = $("#mcpStatus");
+      badge.className = `local ${mode}`;
+      badge.textContent = message;
+    }
+
+    async function mcpRequest(method, params = {}) {
+      if (location.protocol === "file:") throw new Error("MCP requires the local server");
+      const response = await fetch("/mcp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: ++mcpRequestId, method, params })
+      });
+      if (!response.ok) throw new Error(`MCP HTTP ${response.status}`);
+      const payload = await response.json();
+      if (payload.error) throw new Error(payload.error.message || "MCP request failed");
+      return payload.result;
+    }
+
+    function parseToolResult(result) {
+      if (!result || result.isError) throw new Error(result?.content?.[0]?.text || "MCP tool failed");
+      if (result.structuredContent) return result.structuredContent;
+      const text = result.content?.find((item) => item.type === "text")?.text;
+      return text ? JSON.parse(text) : result;
+    }
+
+    async function callMcpTool(name, args) {
+      return parseToolResult(await mcpRequest("tools/call", { name, arguments: args }));
+    }
+
+    async function connectMcp() {
+      setMcpStatus("", "MCP 연결 확인 중…");
+      try {
+        const result = await mcpRequest("tools/list");
+        const count = Array.isArray(result.tools) ? result.tools.length : 0;
+        mcpConnected = count > 0;
+        setMcpStatus(mcpConnected ? "ok" : "offline", mcpConnected ? `MCP 연결됨 · ${count} tools` : "MCP 도구 없음");
+      } catch {
+        mcpConnected = false;
+        setMcpStatus("offline", "Local fallback · MCP 미연결");
+      }
+    }
+
+    function saveDraft() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      $("#saveHint").textContent = "초안이 이 브라우저에 저장됨 · 로그인 없음";
+    }
+
+    function deriveContract(request, refs) {
+      const subject = request.includes("회의") ? "회의 후 결정사항과 반복 업무" : "입력된 업무 문제";
+      const source = refs.length ? refs.join(", ") : "입력된 문제 설명";
+      return {
+        goal: `${subject}를 원문 근거와 함께 자동으로 정리한다.`,
+        constraints: `${source}를 기준으로 초안을 만들고, 사람이 검토하기 전에는 외부 전송이나 업무 확정을 하지 않는다.`,
+        success_criteria: "10분 안에 실행 목록, 담당자, 기한, 근거를 확인할 수 있다.",
+        anti_goals: "자동으로 메일을 발송하거나 담당자에게 업무를 확정하지 않는다.",
+        acceptance_rubric: "원문 근거, 담당자, 기한, 승인 상태가 결과에 포함되고 사람이 수정할 수 있다."
+      };
+    }
+
+    function collectRefs() { return $$("[data-remove]").map((item) => item.dataset.remove); }
+
+    function renderRefList() {
+      const list = $("#fileList"); list.replaceChildren();
+      state.refs.forEach((ref) => {
+        const button = document.createElement("button"); button.className = "chip"; button.type = "button"; button.dataset.remove = ref; button.textContent = `＋ ${ref}`; list.appendChild(button);
+      });
+      const add = document.createElement("button"); add.className = "chip"; add.type = "button"; add.id = "addFile"; add.textContent = "＋ 자료 추가"; add.addEventListener("click", () => $("#fileInput").click()); list.appendChild(add);
+    }
+
+    function setStep(active) {
+      $$(".step").forEach((element, index) => {
+        element.classList.toggle("active", element.dataset.step === active);
+        element.classList.toggle("done", (active !== "request" && index === 0) || (active === "handoff" && index === 1));
+      });
+    }
+
+    function contractReady() { return fieldKeys.filter((key) => (state.contract[key] || "").trim()).length; }
+
+    async function structureWithMcp(request, refs) {
+      if (mcpConnected) {
+        try {
+          const result = await callMcpTool("ax_structure_problem", { request, refs });
+          if (result.contract) return result.contract;
+        } catch {
+          mcpConnected = false;
+          setMcpStatus("offline", "Local fallback · MCP 재연결 필요");
+        }
+      }
+      return deriveContract(request, refs);
+    }
+
+    async function handoffWithMcp() {
+      if (mcpConnected) {
+        try {
+          const result = await callMcpTool("ax_create_handoff", { request: state.request, refs: state.refs, contract: state.contract });
+          if (result.markdown) return result.markdown;
+        } catch {
+          mcpConnected = false;
+          setMcpStatus("offline", "Local fallback · MCP 재연결 필요");
+        }
+      }
+      return makeHandoff();
+    }
+
+    function makeHandoff() {
+      const c = state.contract;
+      const refs = state.refs.length ? state.refs.map((ref) => `- ${ref}`).join("\n") : "- problem statement";
+      return `# Workflow handoff\n\n## Request\n${state.request || "(empty)"}\n\n## References\n${refs}\n\n## Mode\nreview-only\n\n## Contract\n\n### Goal\n${c.goal || "(needs input)"}\n\n### Constraints\n${c.constraints || "(needs input)"}\n\n### Success criteria\n${c.success_criteria || "(needs input)"}\n\n### Anti-goals\n${c.anti_goals || "(needs input)"}\n\n### Acceptance rubric\n${c.acceptance_rubric || "(needs input)"}\n\n## Verification\n- owner\n- due_date\n- evidence\n- human_approval`;
+    }
+
+    function renderContract() {
+      const complete = contractReady() === fieldKeys.length;
+      $("#contractBadge").textContent = "직접 입력";
+      $("#contractBadge").className = "badge blue";
+      fieldKeys.forEach((key) => {
+        const field = $(`[data-field="${key}"]`); const textarea = field.querySelector("textarea"); const small = field.querySelector("small");
+        if (textarea.value !== (state.contract[key] || "")) textarea.value = state.contract[key] || "";
+        const filled = Boolean((state.contract[key] || "").trim());
+        field.classList.toggle("complete", filled); field.classList.toggle("missing", !filled);
+        small.textContent = filled ? "editable" : "입력 필요";
+      });
+      $("#requestPreview").textContent = state.request || "문제 입력이 없습니다.";
+      $("#referencePreview").textContent = state.refs.length ? `참고자료: ${state.refs.join(", ")}` : "참고자료: 없음";
+      $("#handoffText").textContent = makeHandoff();
+      $("#approve").disabled = !complete;
+      $("#workflowStatus").textContent = complete ? "✓ 검토 가능" : "필수 항목을 직접 입력하세요";
+      $("#workflowMiddle").textContent = state.request.includes("자동화") ? "반복 업무를 실행 단위로 구조화" : "문제를 실행 단위로 구조화";
+    }
+
+    function openResult() {
+      $("#inputView").classList.add("hide"); $("#resultView").classList.add("show"); setStep("frame"); renderContract();
+    }
+
+    function download(filename, content, type) {
+      const blob = new Blob([content], { type }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a");
+      anchor.href = url; anchor.download = filename; anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 200);
+    }
+
+    async function copyHandoff() {
+      const text = await handoffWithMcp();
+      try { await navigator.clipboard.writeText(text); }
+      catch { const helper = document.createElement("textarea"); helper.value = text; document.body.appendChild(helper); helper.select(); document.execCommand("copy"); helper.remove(); }
+      $("#handoffBadge").textContent = "Copied"; notify("handoff를 클립보드에 복사했습니다.");
+    }
+
+    $("#analyze").addEventListener("click", async () => {
+      const request = $("#request").value.trim(); $("#inputError").textContent = "";
+      if (request.length < 15) { $("#inputError").textContent = "문제를 15자 이상 입력해 주세요."; $("#request").focus(); return; }
+      const button = $("#analyze"); button.disabled = true;
+      state.request = request; state.refs = collectRefs(); state.contract = await structureWithMcp(request, state.refs); state.approved = false; saveDraft(); openResult(); button.disabled = false;
+      notify(mcpConnected ? "MCP가 문제를 구조화했습니다. 각 항목을 직접 수정하세요." : "로컬 초안을 만들었습니다. 각 항목을 직접 수정하세요.");
+    });
+
+    $$("[data-field] textarea").forEach((textarea) => textarea.addEventListener("input", (event) => { state.contract[event.target.closest("[data-field]").dataset.field] = event.target.value; state.approved = false; saveDraft(); renderContract(); }));
+    $("#back").addEventListener("click", () => { $("#resultView").classList.remove("show"); $("#inputView").classList.remove("hide"); setStep("request"); notify("문제 입력을 수정할 수 있습니다."); });
+    $("#copy").addEventListener("click", copyHandoff);
+    $("#downloadMd").addEventListener("click", async () => { download("workflow-handoff.md", await handoffWithMcp(), "text/markdown"); notify("Markdown 파일을 다운로드했습니다."); });
+    $("#downloadJson").addEventListener("click", () => { download("workflow-contract.json", JSON.stringify({ request: state.request, refs: state.refs, contract: state.contract }, null, 2), "application/json"); notify("JSON 파일을 다운로드했습니다."); });
+    $("#approve").addEventListener("click", async () => {
+      if (contractReady() !== fieldKeys.length) { notify("구조화 단계의 항목을 직접 입력해 주세요."); return; }
+      if (mcpConnected) {
+        try {
+          const validation = await callMcpTool("ax_validate_contract", { contract: state.contract });
+          if (!validation.complete) { notify("MCP 검증에서 입력이 부족하다고 판단했습니다."); renderContract(); return; }
+        } catch {
+          mcpConnected = false;
+          setMcpStatus("offline", "Local fallback · MCP 재연결 필요");
+        }
+      }
+      state.approved = true; saveDraft(); setStep("handoff"); $("#success").textContent = "✓ 준비 완료"; $("#handoffBadge").textContent = "Ready"; notify("handoff를 실행할 준비가 되었습니다.");
+    });
+    $("#addFile").addEventListener("click", () => $("#fileInput").click());
+    $("#fileInput").addEventListener("change", (event) => { event.target.files && [...event.target.files].forEach((file) => { const button = document.createElement("button"); button.className = "chip"; button.type = "button"; button.dataset.remove = file.name; button.textContent = `＋ ${file.name}`; $("#fileList").insertBefore(button, $("#addFile")); }); state.refs = collectRefs(); saveDraft(); notify("파일 이름을 로컬 참고자료로 추가했습니다."); });
+    $("#fileList").addEventListener("click", (event) => { const button = event.target.closest("[data-remove]"); if (!button) return; button.remove(); state.refs = collectRefs(); saveDraft(); });
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (saved && typeof saved.request === "string" && Array.isArray(saved.refs) && saved.contract && typeof saved.contract === "object") {
+        state.request = saved.request; state.refs = saved.refs.map(String); state.contract = saved.contract; state.approved = saved.approved === true; $("#request").value = state.request; renderRefList(); $("#saveHint").textContent = "저장된 로컬 초안을 불러왔습니다."; openResult();
+      }
+    } catch { localStorage.removeItem(STORAGE_KEY); }
+
+    connectMcp();
+  </script>
+</body>
+</html>

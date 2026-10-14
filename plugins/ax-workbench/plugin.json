@@ -1,0 +1,31 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "ax-workbench",
+  "version": "0.1.0",
+  "description": "Turn a vague work problem into a Korean five-field contract and a review-only handoff.",
+  "author": {
+    "name": "sanghee"
+  },
+  "license": "MIT",
+  "keywords": [
+    "ax",
+    "workflow",
+    "problem-solving",
+    "korean",
+    "review-only",
+    "mcp"
+  ],
+  "extensions": {
+    "com.openai": {
+      "onboardingSkill": "./skills/setup/SKILL.md",
+      "interface": {
+        "displayName": "AX Workbench",
+        "shortDescription": "문제를 구조화하고 검토용 handoff로 정리",
+        "longDescription": "문제 원문과 참고자료를 5-field 계약으로 구조화하고, 사람이 검토할 수 있는 handoff 문서를 만듭니다.",
+        "developerName": "sanghee",
+        "category": "Developer Tools",
+        "capabilities": ["Read", "Write"]
+      }
+    }
+  }
+}

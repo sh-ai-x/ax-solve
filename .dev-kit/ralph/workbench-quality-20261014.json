@@ -1,0 +1,27 @@
+{
+  "ambiguity_answers": {},
+  "attended_lock": true,
+  "babysit_state": "",
+  "blockers": [],
+  "build_state": "",
+  "completed_sub_stages": [
+    "BUILD",
+    "BABYSIT",
+    "SHIP"
+  ],
+  "current_stage": "USER_MERGE_REQUIRED",
+  "evidence_hand_off": "",
+  "idea": "Make AX Workbench mockup testable with unit, integration, and e2e coverage plus README screenshots",
+  "iteration": 5,
+  "last_action": "SHIP signalled USER_MERGE_REQUIRED",
+  "last_blocked_ask": null,
+  "next_action": "operator runs gh pr merge",
+  "plan_hand_off": "",
+  "proposal_html": "",
+  "proposal_yaml": "",
+  "rewind_history": [],
+  "session": "workbench-quality-20261014",
+  "ship_state": "",
+  "started_at": "2026-10-14T10:18:38+00:00",
+  "sub_stage": "SHIP"
+}

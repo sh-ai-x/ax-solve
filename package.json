@@ -1,0 +1,13 @@
+{
+  "name": "ax-solve-workbench",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:unit": "node --test tests/unit/*.test.mjs",
+    "test:integration": "node --test tests/integration/*.test.mjs",
+    "test:plugin": "node --test tests/plugin/*.test.mjs",
+    "test": "npm run test:unit && npm run test:integration && npm run test:plugin && npm run test:e2e",
+    "test:e2e": "python3 -m pytest -q tests/e2e && python3 tests/e2e/capture_screenshots.py",
+    "test:screenshots": "python3 tests/e2e/capture_screenshots.py"
+  }
+}
