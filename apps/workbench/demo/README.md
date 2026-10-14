@@ -11,6 +11,10 @@ Goal, Constraints, Success criteria, Anti-goals, Acceptance rubric을 사용자�
 프로젝트 루트의 [plugins/ax-workbench](../../plugins/ax-workbench)에 별도로
 제공하며, MCP가 없을 때는 브라우저 내부의 local fallback으로 동작한다.
 
+참고자료를 구조화하면 변환된 Markdown을 `참고자료 Markdown 직접 수정` 영역에서
+검토·수정할 수 있다. 수정한 본문은 handoff에 즉시 반영되며, `초안 저장` 버튼을
+눌렀을 때만 저장된 초안에 반영된다.
+
 플러그인 설치·Skill 사용법과 기능별 명세는 프로젝트 루트의
 [README](../../README.md#claude-codecodex-%ED%98%B8%ED%99%98-plugin)를 참고한다.
 

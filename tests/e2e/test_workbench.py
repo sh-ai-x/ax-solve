@@ -92,6 +92,11 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
             "mimeType": "text/html",
             "buffer": b"<h2>Uploaded decision</h2><p><strong>Ready</strong></p>",
         })
+        page.locator("#fileInput").set_input_files({
+            "name": "settings.yaml",
+            "mimeType": "application/yaml",
+            "buffer": b"title: Uploaded settings\nowners:\n  - Mina",
+        })
         page.get_by_role("button", name="문제 구조화하기").click()
         expect(page.get_by_text("구조화 단계 · 직접 입력")).to_be_visible()
         expect(page.locator("#contractBadge")).to_have_text("직접 입력")
@@ -99,17 +104,24 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
         expect(page.locator("#referencePreview")).to_contain_text("meeting-notes.md")
         expect(page.locator("body")).not_to_contain_text("5 / 5 complete")
 
+        reference_editor = page.get_by_role("textbox", name="Markdown 참고자료 · decisions.html")
+        expect(reference_editor).to_have_value("# Decision\n\nReview the draft by Friday.")
+        expect(page.get_by_role("textbox", name="Markdown 참고자료 · settings.yaml")).to_have_value("```yaml\ntitle: Uploaded settings\nowners:\n  - Mina\n```")
+        reference_editor.fill("# 사람이 수정한 결정\n\n- 금요일까지 검토")
+        expect(page.locator("#handoffText")).to_contain_text("# 사람이 수정한 결정")
+
         goal = page.locator('textarea[aria-label="Goal"]')
         goal.fill("사용자가 직접 고친 목표")
         page.get_by_role("button", name="초안 저장").last.click()
         page.reload()
         goal = page.locator('textarea[aria-label="Goal"]')
         expect(goal).to_have_value("사용자가 직접 고친 목표")
+        expect(page.get_by_role("textbox", name="Markdown 참고자료 · decisions.html")).to_have_value("# 사람이 수정한 결정\n\n- 금요일까지 검토")
         expect(page.locator("#handoffText")).to_contain_text("사용자가 직접 고친 목표")
         expect(page.locator("#handoffText")).to_contain_text("## Request")
         expect(page.locator("#handoffText")).to_contain_text("회의가 끝난 뒤 결정사항과 반복 업무")
         expect(page.locator("#handoffText")).to_contain_text("meeting-notes.md")
-        expect(page.locator("#handoffText")).to_contain_text("# Decision")
+        expect(page.locator("#handoffText")).to_contain_text("# 사람이 수정한 결정")
         expect(page.locator("#handoffText")).not_to_contain_text("<h1>Decision</h1>")
         expect(page.locator("#handoffText")).to_contain_text(f"Path: {reference_path}")
         expect(page.locator("#handoffText")).to_contain_text("## Uploaded decision")
@@ -132,4 +144,24 @@ def test_empty_contract_field_blocks_handoff(workbench_server, chromium_executab
         page.locator('textarea[aria-label="Acceptance rubric"]').fill("")
         expect(page.get_by_role("button", name="handoff 준비 완료")).to_be_disabled()
         expect(page.locator("#workflowStatus")).to_have_text("필수 항목을 직접 입력하세요")
+        browser.close()
+
+
+def test_unsaved_result_edits_are_not_restored(workbench_server, chromium_executable):
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True, executable_path=chromium_executable)
+        page = browser.new_page()
+        page.goto(f"{workbench_server}/apps/workbench/demo/mvp.html")
+        page.locator("#request").fill("초안 저장 전 변경사항이 자동으로 복원되지 않는지 확인합니다.")
+        page.get_by_role("button", name="문제 구조화하기").click()
+        expect(page.locator("#resultView")).to_be_visible()
+
+        goal = page.locator('textarea[aria-label="Goal"]')
+        saved_goal = goal.input_value()
+        page.get_by_role("button", name="초안 저장").last.click()
+        goal.fill("저장하지 않은 임시 변경")
+        page.reload()
+
+        expect(page.locator("#resultView")).to_be_visible()
+        expect(page.locator('textarea[aria-label="Goal"]')).to_have_value(saved_goal)
         browser.close()

@@ -5,6 +5,7 @@ import {
   createHandoff,
   deriveContract,
   htmlToMarkdown,
+  yamlToMarkdown,
   validateContract
 } from "../../apps/workbench/mcp/contract.mjs";
 
@@ -20,6 +21,15 @@ test("htmlToMarkdown keeps useful structure and removes executable markup", () =
   assert.match(markdown, /초안은 \*\*금요일\*\*까지 \[검토\]\(\/review\)합니다\./);
   assert.match(markdown, /- 담당자 지정/);
   assert.doesNotMatch(markdown, /script|alert/);
+});
+
+test("yamlToMarkdown preserves YAML as a Markdown code block", () => {
+  const markdown = yamlToMarkdown("title: 회의 결정\nowners:\n  - 민지\n  - 준");
+
+  assert.match(markdown, /^```yaml/);
+  assert.match(markdown, /title: 회의 결정/);
+  assert.match(markdown, /- 민지/);
+  assert.match(markdown, /```$/);
 });
 
 test("deriveContract creates a meeting workflow contract from request and references", () => {
