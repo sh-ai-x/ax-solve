@@ -25,8 +25,8 @@ def _wait_for_server(url: str) -> None:
 
 
 @pytest.fixture()
-def workbench_server(unused_tcp_port):
-    port = unused_tcp_port
+def workbench_server(free_tcp_port):
+    port = free_tcp_port
     env = os.environ.copy()
     env["AX_WORKBENCH_PORT"] = str(port)
     process = subprocess.Popen(
@@ -72,6 +72,11 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
         page.goto(f"{workbench_server}/apps/workbench/demo/mvp.html")
 
         expect(page.locator("#mcpStatus")).to_have_text("MCP 연결됨 · 3 tools")
+        page.locator("#fileInput").set_input_files({
+            "name": "decisions.txt",
+            "mimeType": "text/plain",
+            "buffer": b"Decision: review the draft by Friday.",
+        })
         page.get_by_role("button", name="문제 구조화하기").click()
         expect(page.get_by_text("구조화 단계 · 직접 입력")).to_be_visible()
         expect(page.locator("#contractBadge")).to_have_text("직접 입력")
@@ -85,6 +90,7 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
         expect(page.locator("#handoffText")).to_contain_text("## Request")
         expect(page.locator("#handoffText")).to_contain_text("회의가 끝난 뒤 결정사항과 반복 업무")
         expect(page.locator("#handoffText")).to_contain_text("meeting-notes.md")
+        expect(page.locator("#handoffText")).to_contain_text("Decision: review the draft by Friday.")
         expect(page.locator("#handoffText")).not_to_contain_text("/work on meeting-summary")
 
         page.get_by_role("button", name="handoff 준비 완료").click()

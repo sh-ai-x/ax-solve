@@ -100,7 +100,10 @@ test("plugin stdio MCP initializes and preserves request, refs, and edited contr
       name: "ax_structure_problem",
       arguments: {
         request: "회의 후 결정사항과 반복 업무를 정리합니다.",
-        refs: ["meeting-notes.md", "slack-thread.txt"]
+        refs: [
+          { name: "meeting-notes.md", content: "결정: 금요일까지 초안을 검토합니다." },
+          { name: "slack-thread.txt", content: "담당: 민지" }
+        ]
       }
     });
     const contract = structured.result.structuredContent.contract;
@@ -116,6 +119,7 @@ test("plugin stdio MCP initializes and preserves request, refs, and edited contr
     });
     assert.match(handoff.result.structuredContent.markdown, /## Request/);
     assert.match(handoff.result.structuredContent.markdown, /meeting-notes\.md/);
+    assert.match(handoff.result.structuredContent.markdown, /결정: 금요일까지 초안을 검토합니다\./);
     assert.match(handoff.result.structuredContent.markdown, /사용자가 직접 수정한 목표/);
     assert.match(handoff.result.structuredContent.markdown, /review-only/);
   } finally {

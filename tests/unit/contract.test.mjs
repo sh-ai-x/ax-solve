@@ -62,3 +62,19 @@ test("createHandoff preserves edited contract values and readiness", () => {
   assert.match(handoff.markdown, /ready for human review/);
   assert.equal(handoff.json.validation.complete, true);
 });
+
+test("createHandoff includes reference material content", () => {
+  const handoff = createHandoff({
+    refs: [{ name: "meeting-notes.md", content: "결정: 금요일까지 초안을 검토합니다." }],
+    contract: {
+      goal: "목표",
+      constraints: "제약",
+      success_criteria: "성공",
+      anti_goals: "제외",
+      acceptance_rubric: "승인"
+    }
+  });
+
+  assert.match(handoff.markdown, /- meeting-notes\.md/);
+  assert.match(handoff.markdown, /결정: 금요일까지 초안을 검토합니다\./);
+});

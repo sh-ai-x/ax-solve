@@ -13,6 +13,17 @@ import {
 const PORT = Number(process.env.AX_WORKBENCH_PORT || 8787);
 const MCP_VERSION = "2026-07-28";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+const referenceSchema = {
+  oneOf: [
+    { type: "string" },
+    {
+      type: "object",
+      additionalProperties: false,
+      required: ["name"],
+      properties: { name: { type: "string" }, content: { type: "string" } }
+    }
+  ]
+};
 
 const tools = [
   {
@@ -24,7 +35,7 @@ const tools = [
       required: ["request"],
       properties: {
         request: { type: "string", minLength: 15, description: "사용자가 해결하려는 문제" },
-        refs: { type: "array", items: { type: "string" }, description: "참고자료 이름" }
+        refs: { type: "array", items: referenceSchema, description: "참고자료 이름과 내용" }
       }
     }
   },
@@ -52,7 +63,7 @@ const tools = [
       required: ["contract"],
       properties: {
         request: { type: "string" },
-        refs: { type: "array", items: { type: "string" } },
+        refs: { type: "array", items: referenceSchema },
         contract: {
           type: "object",
           properties: Object.fromEntries(FIELD_KEYS.map((key) => [key, { type: "string" }]))
@@ -92,6 +103,18 @@ function textResult(value, isError = false, structuredContent) {
   return result;
 }
 
+function normalizeRefs(refs) {
+  return Array.isArray(refs) ? refs.map((ref) => {
+    if (ref && typeof ref === "object") {
+      return {
+        name: String(ref.name || "reference"),
+        content: typeof ref.content === "string" ? ref.content : String(ref.content ?? "")
+      };
+    }
+    return String(ref);
+  }) : [];
+}
+
 async function readBody(req) {
   let body = "";
   for await (const chunk of req) {
@@ -106,7 +129,7 @@ async function callTool(name, args = {}) {
     if (typeof args.request !== "string" || args.request.trim().length < 15) {
       return textResult("request must be at least 15 characters", true);
     }
-    const refs = Array.isArray(args.refs) ? args.refs.map(String) : [];
+    const refs = normalizeRefs(args.refs);
     const value = { request: args.request.trim(), refs, contract: deriveContract(args.request.trim(), refs) };
     return textResult(value, false, value);
   }
@@ -119,7 +142,7 @@ async function callTool(name, args = {}) {
   if (name === "ax_create_handoff") {
     const value = createHandoff({
       request: typeof args.request === "string" ? args.request : "",
-      refs: Array.isArray(args.refs) ? args.refs.map(String) : [],
+      refs: normalizeRefs(args.refs),
       contract: args.contract || {}
     });
     return textResult(value, false, value);
