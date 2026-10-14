@@ -80,6 +80,11 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
             "buffer": b"<h1>Decision</h1><p>Review the draft by Friday.</p>",
         })
         page.get_by_role("textbox", name="decisions.html 절대경로").fill(str(reference_path))
+        page.locator("#fileInput").set_input_files({
+            "name": "uploaded.html",
+            "mimeType": "text/html",
+            "buffer": b"<h2>Uploaded decision</h2><p><strong>Ready</strong></p>",
+        })
         page.get_by_role("button", name="문제 구조화하기").click()
         expect(page.get_by_text("구조화 단계 · 직접 입력")).to_be_visible()
         expect(page.locator("#contractBadge")).to_have_text("직접 입력")
@@ -96,6 +101,8 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
         expect(page.locator("#handoffText")).to_contain_text("# Decision")
         expect(page.locator("#handoffText")).not_to_contain_text("<h1>Decision</h1>")
         expect(page.locator("#handoffText")).to_contain_text(f"Path: {reference_path}")
+        expect(page.locator("#handoffText")).to_contain_text("## Uploaded decision")
+        expect(page.locator("#handoffText")).not_to_contain_text("<h2>Uploaded decision</h2>")
         expect(page.locator("#handoffText")).not_to_contain_text("/work on meeting-summary")
 
         page.get_by_role("button", name="handoff 준비 완료").click()

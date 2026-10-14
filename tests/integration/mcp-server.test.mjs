@@ -65,6 +65,15 @@ test("read reference tool converts local HTML to Markdown", async () => {
     });
     assert.equal(rejected.result.isError, true);
     assert.match(rejected.result.content[0].text, /absolute path/);
+
+    const uploaded = await rpc("tools/call", {
+      name: "ax_read_reference",
+      arguments: { name: "uploaded.html", content: "<h2>업로드 결정</h2><p><strong>검토 완료</strong></p>" }
+    });
+    assert.equal(uploaded.result.structuredContent.path, "");
+    assert.match(uploaded.result.structuredContent.content, /## 업로드 결정/);
+    assert.match(uploaded.result.structuredContent.content, /\*\*검토 완료\*\*/);
+    assert.doesNotMatch(uploaded.result.structuredContent.content, /<h2>|<p>/);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

@@ -331,12 +331,17 @@
     }
 
     async function readReferenceWithMcp(ref) {
-      if (!mcpConnected || !ref.path) return ref;
+      const reference = normalizeReference(ref);
+      const isUploadedHtml = !reference.path && /\.html?$/i.test(reference.name) && reference.content;
+      if (!mcpConnected || (!reference.path && !isUploadedHtml)) return ref;
       try {
-        const result = await callMcpTool("ax_read_reference", { path: ref.path });
-        if (typeof result.content === "string") return { ...ref, name: result.name || ref.name, path: result.path || ref.path, content: result.content };
+        const args = reference.path
+          ? { path: reference.path }
+          : { name: reference.name, content: reference.content };
+        const result = await callMcpTool("ax_read_reference", args);
+        if (typeof result.content === "string") return { ...reference, name: result.name || reference.name, path: result.path || reference.path, content: result.content };
       } catch {
-        notify(`${ref.path}를 MCP에서 읽지 못해 업로드된 본문을 사용합니다.`);
+        notify(`${reference.name}를 MCP에서 변환하지 못해 업로드된 본문을 사용합니다.`);
       }
       return ref;
     }

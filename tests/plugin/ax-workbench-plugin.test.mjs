@@ -101,6 +101,13 @@ test("plugin read tool converts an authorized local HTML path", async () => {
     assert.equal(value.format, "markdown");
     assert.match(value.content, /# Notes/);
     assert.match(value.content, /\*\*Ready\*\* for review\./);
+
+    const uploaded = await server.request(2, "tools/call", {
+      name: "ax_read_reference",
+      arguments: { name: "uploaded.html", content: "<h2>Uploaded</h2><p><strong>Ready</strong></p>" }
+    });
+    assert.match(uploaded.result.structuredContent.content, /## Uploaded/);
+    assert.doesNotMatch(uploaded.result.structuredContent.content, /<h2>|<p>/);
   } finally {
     server.child.kill();
     fs.rmSync(directory, { recursive: true, force: true });

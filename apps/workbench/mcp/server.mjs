@@ -21,7 +21,10 @@ const referenceSchema = {
     {
       type: "object",
       additionalProperties: false,
-      required: ["name"],
+      anyOf: [
+        { required: ["path"] },
+        { required: ["name", "content"] }
+      ],
       properties: { name: { type: "string" }, path: { type: "string" }, content: { type: "string" } }
     }
   ]
@@ -30,12 +33,28 @@ const referenceSchema = {
 const tools = [
   {
     name: "ax_read_reference",
-    description: "사용자가 지정한 로컬 참고자료를 읽고 HTML이면 Markdown으로 변환한다.",
+    description: "사용자가 승인한 절대경로 또는 업로드 본문을 읽고 HTML을 Markdown으로 변환한다.",
     inputSchema: {
       type: "object",
       additionalProperties: false,
-      required: ["path"],
-      properties: { path: { type: "string", description: "사용자가 승인하고 입력한 절대경로" } }
+      oneOf: [
+        {
+          required: ["path"],
+          properties: { path: { type: "string", description: "사용자가 승인하고 입력한 절대경로" } }
+        },
+        {
+          required: ["name", "content"],
+          properties: {
+            name: { type: "string", description: "업로드된 참고자료 파일명" },
+            content: { type: "string", description: "사용자가 업로드한 HTML 본문" }
+          }
+        }
+      ],
+      properties: {
+        path: { type: "string" },
+        name: { type: "string" },
+        content: { type: "string" }
+      }
     }
   },
   {
@@ -128,7 +147,18 @@ function normalizeRefs(refs) {
   }) : [];
 }
 
-async function readReference(referencePath) {
+async function readReference(args = {}) {
+  if (typeof args.content === "string" && !Object.prototype.hasOwnProperty.call(args, "path")) {
+    if (Buffer.byteLength(args.content, "utf8") > MAX_REFERENCE_BYTES) throw new Error("reference content is too large");
+    return {
+      name: String(args.name || "reference.html"),
+      path: "",
+      content: htmlToMarkdown(args.content),
+      format: "markdown"
+    };
+  }
+
+  const referencePath = args.path;
   if (typeof referencePath !== "string" || !path.isAbsolute(referencePath)) {
     throw new Error("reference path must be an absolute path");
   }
@@ -160,7 +190,7 @@ async function readBody(req) {
 async function callTool(name, args = {}) {
   if (name === "ax_read_reference") {
     // shortcut: exact user-supplied paths on localhost; add an allowlist/consent token before remote use.
-    const value = await readReference(args.path);
+    const value = await readReference(args);
     return textResult(value, false, value);
   }
 

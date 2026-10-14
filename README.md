@@ -57,7 +57,7 @@ plugins/ax-workbench/
 
 제공하는 MCP 도구는 네 가지입니다.
 
-- `ax_read_reference`: 사용자가 입력한 로컬 경로의 참고자료를 읽고 HTML을 Markdown으로 변환
+- `ax_read_reference`: 사용자가 승인한 절대경로 또는 업로드 HTML을 읽고 Markdown으로 변환
 - `ax_structure_problem`: 문제 원문과 참고자료를 5-field 초안으로 구조화
 - `ax_validate_contract`: 직접 수정한 계약의 누락 필드 검증
 - `ax_create_handoff`: Request·References·Contract·Verification을 포함한
