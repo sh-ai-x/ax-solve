@@ -11,6 +11,7 @@ import {
 } from "./contract.mjs";
 
 const MCP_VERSION = "2025-06-18";
+const WORKSPACE = path.resolve(process.env.AX_WORKBENCH_WORKSPACE || process.cwd());
 const MAX_REFERENCE_BYTES = 1_000_000;
 const referenceSchema = {
   oneOf: [
@@ -207,6 +208,15 @@ async function callTool(name, args = {}) {
 
 async function handleMessage(message) {
   const { id = null, method, params = {} } = message;
+
+  if (method === "server/discover") {
+    send(rpcResult(id, {
+      supportedVersions: [MCP_VERSION],
+      workspace: WORKSPACE,
+      capabilities: { tools: {} }
+    }));
+    return;
+  }
 
   if (method === "initialize") {
     send(rpcResult(id, {

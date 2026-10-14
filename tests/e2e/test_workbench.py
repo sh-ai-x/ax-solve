@@ -147,6 +147,29 @@ def test_empty_contract_field_blocks_handoff(workbench_server, chromium_executab
         browser.close()
 
 
+def test_multiple_drafts_are_manageable_in_workspace_scope(workbench_server, chromium_executable):
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True, executable_path=chromium_executable)
+        page = browser.new_page()
+        page.goto(f"{workbench_server}/apps/workbench/demo/mvp.html")
+        page.locator("#request").fill("첫 번째 작업 디렉터리 초안입니다.")
+        page.get_by_role("button", name="초안 저장").first.click()
+        page.get_by_role("button", name="저장된 Draft").click()
+        expect(page.locator("#draftList .draft-item")).to_have_count(1)
+        page.get_by_role("button", name="＋ 새 Draft").click()
+        page.locator("#request").fill("두 번째 작업 디렉터리 초안입니다.")
+        page.get_by_role("button", name="초안 저장").first.click()
+        page.get_by_role("button", name="저장된 Draft").click()
+        expect(page.locator("#draftScope")).to_contain_text("Workspace:")
+        expect(page.locator("#draftList .draft-item")).to_have_count(2)
+        page.locator("#draftList .draft-item").first.get_by_role("button", name="열기").click()
+        expect(page.locator("#request")).to_have_value("두 번째 작업 디렉터리 초안입니다.")
+        page.get_by_role("button", name="저장된 Draft").click()
+        page.on("dialog", lambda dialog: dialog.accept())
+        page.locator("#draftList .draft-item").last.get_by_role("button", name="삭제").click()
+        expect(page.locator("#draftList .draft-item")).to_have_count(1)
+        browser.close()
+
 def test_unsaved_result_edits_are_not_restored(workbench_server, chromium_executable):
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True, executable_path=chromium_executable)
