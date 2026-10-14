@@ -92,6 +92,11 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
             "mimeType": "text/html",
             "buffer": b"<h2>Uploaded decision</h2><p><strong>Ready</strong></p>",
         })
+        page.locator("#fileInput").set_input_files({
+            "name": "settings.yaml",
+            "mimeType": "application/yaml",
+            "buffer": b"title: Uploaded settings\nowners:\n  - Mina",
+        })
         page.get_by_role("button", name="문제 구조화하기").click()
         expect(page.get_by_text("구조화 단계 · 직접 입력")).to_be_visible()
         expect(page.locator("#contractBadge")).to_have_text("직접 입력")
@@ -101,6 +106,7 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
 
         reference_editor = page.get_by_role("textbox", name="Markdown 참고자료 · decisions.html")
         expect(reference_editor).to_have_value("# Decision\n\nReview the draft by Friday.")
+        expect(page.get_by_role("textbox", name="Markdown 참고자료 · settings.yaml")).to_have_value("```yaml\ntitle: Uploaded settings\nowners:\n  - Mina\n```")
         reference_editor.fill("# 사람이 수정한 결정\n\n- 금요일까지 검토")
         expect(page.locator("#handoffText")).to_contain_text("# 사람이 수정한 결정")
 

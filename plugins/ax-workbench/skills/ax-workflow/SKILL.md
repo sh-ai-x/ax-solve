@@ -13,7 +13,7 @@ Use this skill to move one problem through a small, reviewable workflow:
 
 - Ask for one problem sentence and the names of the materials needed to understand it when they are missing.
 - Keep the original request and reference names in every downstream result.
-- When a user provides an authorized local path or HTML upload, call `ax_read_reference` before structuring; it converts the reference to Markdown.
+- When a user provides an authorized local path or HTML/YAML upload, call `ax_read_reference` before structuring; it converts the reference to Markdown.
 - Do not send email, create or confirm tasks, post to Slack, commit code, or transmit source material externally.
 - Do not execute the user's workflow or invent an execution command. Starting the documented local preview is the only automatic setup action.
 - Keep the preview bound to `127.0.0.1`; do not bind it to `0.0.0.0`, deploy it, or expose source material remotely.
