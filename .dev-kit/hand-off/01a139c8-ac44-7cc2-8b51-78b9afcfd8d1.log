@@ -214,3 +214,27 @@ Bash	find /Users/sanghee/.codex/plugins/cache/dev-kit/dev-kit/0.3.350 -type f \(
 Bash	printf '%s\n' '--- gh version ---' gh --version 2>&1 | sed -n '1,3p' printf '%s\
 Bash	gh auth login --hostname github.com --git-protocol https --web
 Bash	gh auth status 2>&1 | sed -n '1,100p' printf '%s\n' '--- git ---' if [ -d .git ]
+Bash	printf '%s\n' '--- status ---' git status --short --branch printf '%s\n' '--- in
+Bash	sed -n '1,220p' apps/workbench/demo/README.md printf '%s\n' '--- README relevant
+Bash	git status --short --branch 2>&1 | tail -30 git log -1 --format='hash=%H%nauthor
+Bash	rg -n --hidden --glob '!*.png' --glob '!node_modules/**' 'UI workflow mockup|wor
+Bash	sed -n '55,150p' apps/workbench/demo/README.md
+Bash	codex plugin marketplace add DietrichGebert/ponytail codex plugin add ponytail@p
+Bash	sed -n '1,260p' /Users/sanghee/.codex/plugins/cache/ponytail/ponytail/5.2.0/skil
+Bash	wc -l README.md apps/workbench/demo/README.md apps/workbench/demo/mvp.html apps/
+Bash	sed -n '1,180p' apps/workbench/mcp/contract.mjs sed -n '1,280p' apps/workbench/m
+Bash	sed -n '1,160p' tests/unit/contract.test.mjs sed -n '1,180p' tests/integration/m
+Bash	sed -n '1,220p' README.md sed -n '1,180p' apps/workbench/demo/README.md sed -n '
+Bash	sed -n '1,430p' apps/workbench/demo/mvp.html
+Bash	sed -n '1,180p' tests/e2e/test_workbench.py sed -n '1,160p' tests/e2e/capture_sc
+Bash	sed -n '1,220p' plugins/ax-workbench/mcp/contract.mjs sed -n '1,220p' plugins/ax
+Bash	printf '%s\n' '--- duplicate diff ---' diff -u apps/workbench/mcp/contract.mjs p
+Bash	npm run test:unit && npm run test:integration && npm run test:plugin
+Bash	PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -p no:cacheprovider -q tests/e2e
+Bash	nl -ba tests/e2e/test_workbench.py | sed -n '1,180p' nl -ba tests/e2e/capture_sc
+Bash	npm run test:plugin
+Bash	nl -ba plugins/ax-workbench/mcp/server.mjs | sed -n '1,22p' nl -ba README.md | s
+Bash	printf '%s\n' '--- status ---' git status --short --branch printf '%s\n' '--- RE
+Bash	git status --short --branch && git log -1 --pretty=fuller && git remote -v && rg
+Bash	git fetch origin main && git worktree add -b chore/remove-obsolete-mockup-refs .
+Bash	sed -n '24,38p' README.md && sed -n '1,34p' apps/workbench/demo/README.md
