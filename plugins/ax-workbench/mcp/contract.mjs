@@ -14,9 +14,23 @@ export const FIELD_LABELS = {
   acceptance_rubric: "Acceptance rubric"
 };
 
+function normalizeReference(ref) {
+  if (typeof ref === "string") return { name: ref, content: "" };
+  if (!ref || typeof ref !== "object") return { name: String(ref ?? "reference"), content: "" };
+  return {
+    name: String(ref.name || "reference"),
+    content: typeof ref.content === "string" ? ref.content : String(ref.content ?? "")
+  };
+}
+
+function referenceContentFence(content) {
+  const longest = Math.max(...(content.match(/`+/g) || [""]).map((run) => run.length));
+  return "`".repeat(Math.max(3, longest + 1));
+}
+
 export function deriveContract(request, refs = []) {
   const subject = request.includes("회의") ? "회의 후 결정사항과 반복 업무" : "입력된 업무 문제";
-  const source = refs.length ? refs.join(", ") : "입력된 문제 설명";
+  const source = refs.length ? refs.map((ref) => normalizeReference(ref).name).join(", ") : "입력된 문제 설명";
 
   return {
     goal: `${subject}를 원문 근거와 함께 자동으로 정리한다.`,
@@ -44,7 +58,14 @@ export function validateContract(contract = {}) {
 
 export function createHandoff({ request = "", refs = [], contract = {} } = {}) {
   const validation = validateContract(contract);
-  const referenceLines = refs.length ? refs.map((ref) => `- ${ref}`) : ["- problem statement"];
+  const referenceLines = refs.length
+    ? refs.flatMap((ref) => {
+      const reference = normalizeReference(ref);
+      if (!reference.content) return [`- ${reference.name}`];
+      const fence = referenceContentFence(reference.content);
+      return [`- ${reference.name}`, `  Content:`, `  ${fence}text`, reference.content, `  ${fence}`];
+    })
+    : ["- problem statement"];
   const contractLines = FIELD_KEYS.flatMap((key) => [
     `### ${FIELD_LABELS[key]}`,
     contract[key] || "(needs input)",

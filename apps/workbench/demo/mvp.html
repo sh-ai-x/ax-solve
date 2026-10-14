@@ -135,7 +135,7 @@
 
     <section class="card input-view" id="inputView">
       <div class="input-card">
-        <div class="card-title"><div><h2>무엇을 해결하고 싶나요?</h2><p>한 문장으로 쓰고, 이해에 필요한 자료의 이름만 붙입니다.</p></div><span class="badge blue">Step 1 / 3</span></div>
+        <div class="card-title"><div><h2>무엇을 해결하고 싶나요?</h2><p>한 문장으로 쓰고, 이해에 필요한 자료를 선택합니다. 파일 이름과 내용이 handoff에 포함됩니다.</p></div><span class="badge blue">Step 1 / 3</span></div>
         <label class="label" for="request">Problem statement</label>
         <textarea class="textarea" id="request">회의가 끝난 뒤 결정사항과 반복 업무를 매번 수동으로 정리하고 있어요. 회의록과 Slack 대화를 바탕으로 다음 업무를 자동화하고 싶습니다.</textarea>
         <label class="label" for="fileInput">Reference materials</label>
@@ -181,6 +181,7 @@
     const state = { request: "", refs: [], contract: {}, approved: false };
     let mcpConnected = false;
     let mcpRequestId = 0;
+    let referenceRead = Promise.resolve();
     const $ = (selector) => document.querySelector(selector);
     const $$ = (selector) => [...document.querySelectorAll(selector)];
 
@@ -237,9 +238,32 @@
       $("#saveHint").textContent = "초안이 이 브라우저에 저장됨 · 로그인 없음";
     }
 
+    function normalizeReference(ref) {
+      if (typeof ref === "string") return { name: ref, content: "" };
+      if (!ref || typeof ref !== "object") return { name: String(ref ?? "reference"), content: "" };
+      return { name: String(ref.name || "reference"), content: typeof ref.content === "string" ? ref.content : String(ref.content ?? "") };
+    }
+
+    function referenceName(ref) { return normalizeReference(ref).name; }
+
+    function referenceContentFence(content) {
+      const longest = Math.max(...(content.match(/`+/g) || [""]).map((run) => run.length));
+      return "`".repeat(Math.max(3, longest + 1));
+    }
+
+    function formatReferenceLines(refs) {
+      if (!refs.length) return ["- problem statement"];
+      return refs.flatMap((ref) => {
+        const reference = normalizeReference(ref);
+        if (!reference.content) return [`- ${reference.name}`];
+        const fence = referenceContentFence(reference.content);
+        return [`- ${reference.name}`, "  Content:", `  ${fence}text`, reference.content, `  ${fence}`];
+      });
+    }
+
     function deriveContract(request, refs) {
       const subject = request.includes("회의") ? "회의 후 결정사항과 반복 업무" : "입력된 업무 문제";
-      const source = refs.length ? refs.join(", ") : "입력된 문제 설명";
+      const source = refs.length ? refs.map((ref) => referenceName(ref)).join(", ") : "입력된 문제 설명";
       return {
         goal: `${subject}를 원문 근거와 함께 자동으로 정리한다.`,
         constraints: `${source}를 기준으로 초안을 만들고, 사람이 검토하기 전에는 외부 전송이나 업무 확정을 하지 않는다.`,
@@ -249,12 +273,15 @@
       };
     }
 
-    function collectRefs() { return $$("[data-remove]").map((item) => item.dataset.remove); }
+    function collectRefs() {
+      return $$('[data-remove]').map((item) => state.refs.find((ref) => referenceName(ref) === item.dataset.remove) || { name: item.dataset.remove, content: "" });
+    }
 
     function renderRefList() {
       const list = $("#fileList"); list.replaceChildren();
       state.refs.forEach((ref) => {
-        const button = document.createElement("button"); button.className = "chip"; button.type = "button"; button.dataset.remove = ref; button.textContent = `＋ ${ref}`; list.appendChild(button);
+        const name = referenceName(ref);
+        const button = document.createElement("button"); button.className = "chip"; button.type = "button"; button.dataset.remove = name; button.textContent = `＋ ${name}`; list.appendChild(button);
       });
       const add = document.createElement("button"); add.className = "chip"; add.type = "button"; add.id = "addFile"; add.textContent = "＋ 자료 추가"; add.addEventListener("click", () => $("#fileInput").click()); list.appendChild(add);
     }
@@ -296,7 +323,7 @@
 
     function makeHandoff() {
       const c = state.contract;
-      const refs = state.refs.length ? state.refs.map((ref) => `- ${ref}`).join("\n") : "- problem statement";
+      const refs = formatReferenceLines(state.refs).join("\n");
       return `# Workflow handoff\n\n## Request\n${state.request || "(empty)"}\n\n## References\n${refs}\n\n## Mode\nreview-only\n\n## Contract\n\n### Goal\n${c.goal || "(needs input)"}\n\n### Constraints\n${c.constraints || "(needs input)"}\n\n### Success criteria\n${c.success_criteria || "(needs input)"}\n\n### Anti-goals\n${c.anti_goals || "(needs input)"}\n\n### Acceptance rubric\n${c.acceptance_rubric || "(needs input)"}\n\n## Verification\n- owner\n- due_date\n- evidence\n- human_approval`;
     }
 
@@ -312,7 +339,7 @@
         small.textContent = filled ? "editable" : "입력 필요";
       });
       $("#requestPreview").textContent = state.request || "문제 입력이 없습니다.";
-      $("#referencePreview").textContent = state.refs.length ? `참고자료: ${state.refs.join(", ")}` : "참고자료: 없음";
+      $("#referencePreview").textContent = state.refs.length ? `참고자료: ${state.refs.map((ref) => referenceName(ref)).join(", ")}` : "참고자료: 없음";
       $("#handoffText").textContent = makeHandoff();
       $("#approve").disabled = !complete;
       $("#workflowStatus").textContent = complete ? "✓ 검토 가능" : "필수 항목을 직접 입력하세요";
@@ -339,6 +366,7 @@
       const request = $("#request").value.trim(); $("#inputError").textContent = "";
       if (request.length < 15) { $("#inputError").textContent = "문제를 15자 이상 입력해 주세요."; $("#request").focus(); return; }
       const button = $("#analyze"); button.disabled = true;
+      await referenceRead;
       state.request = request; state.refs = collectRefs(); state.contract = await structureWithMcp(request, state.refs); state.approved = false; saveDraft(); openResult(); button.disabled = false;
       notify(mcpConnected ? "MCP가 문제를 구조화했습니다. 각 항목을 직접 수정하세요." : "로컬 초안을 만들었습니다. 각 항목을 직접 수정하세요.");
     });
@@ -362,13 +390,24 @@
       state.approved = true; saveDraft(); setStep("handoff"); $("#success").textContent = "✓ 준비 완료"; $("#handoffBadge").textContent = "Ready"; notify("handoff를 실행할 준비가 되었습니다.");
     });
     $("#addFile").addEventListener("click", () => $("#fileInput").click());
-    $("#fileInput").addEventListener("change", (event) => { event.target.files && [...event.target.files].forEach((file) => { const button = document.createElement("button"); button.className = "chip"; button.type = "button"; button.dataset.remove = file.name; button.textContent = `＋ ${file.name}`; $("#fileList").insertBefore(button, $("#addFile")); }); state.refs = collectRefs(); saveDraft(); notify("파일 이름을 로컬 참고자료로 추가했습니다."); });
+    $("#fileInput").addEventListener("change", (event) => {
+      const files = [...(event.target.files || [])];
+      if (!files.length) return;
+      // shortcut: text-readable files within the local MCP request limit; add format-specific extraction/streaming for larger or binary materials.
+      referenceRead = referenceRead.then(async () => {
+        const existing = collectRefs();
+        const added = await Promise.all(files.map(async (file) => ({ name: file.name, content: await file.text() })));
+        state.refs = [...existing, ...added];
+        renderRefList(); saveDraft(); event.target.value = "";
+        notify("파일 이름과 내용을 로컬 참고자료로 추가했습니다.");
+      }).catch(() => notify("파일 내용을 읽지 못했습니다."));
+    });
     $("#fileList").addEventListener("click", (event) => { const button = event.target.closest("[data-remove]"); if (!button) return; button.remove(); state.refs = collectRefs(); saveDraft(); });
 
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
       if (saved && typeof saved.request === "string" && Array.isArray(saved.refs) && saved.contract && typeof saved.contract === "object") {
-        state.request = saved.request; state.refs = saved.refs.map(String); state.contract = saved.contract; state.approved = saved.approved === true; $("#request").value = state.request; renderRefList(); $("#saveHint").textContent = "저장된 로컬 초안을 불러왔습니다."; openResult();
+        state.request = saved.request; state.refs = saved.refs.map(normalizeReference); state.contract = saved.contract; state.approved = saved.approved === true; $("#request").value = state.request; renderRefList(); $("#saveHint").textContent = "저장된 로컬 초안을 불러왔습니다."; openResult();
       }
     } catch { localStorage.removeItem(STORAGE_KEY); }
 

@@ -9,10 +9,10 @@
 `ax-workflow` Skill을 실행하면 로컬 MVP와 HTTP MCP를 먼저 확인·실행하고,
 브라우저를 `127.0.0.1:8787`로 엽니다.
 
-- 문제 문장과 참고자료 이름을 첫 단계에서 입력합니다.
+- 문제 문장과 참고자료 파일을 첫 단계에서 선택합니다. 선택한 파일의 이름과 내용이 handoff에 포함됩니다.
 - 구조화 단계에서 `Goal`, `Constraints`, `Success criteria`, `Anti-goals`,
   `Acceptance rubric`을 직접 수정합니다.
-- 첫 단계의 원문과 참고자료는 구조화 화면과 handoff 문서의 `Request`,
+- 첫 단계의 원문과 참고자료(파일명·내용)는 구조화 화면과 handoff 문서의 `Request`,
   `References`에 그대로 이어집니다.
 - handoff는 Markdown·JSON으로 복사하거나 다운로드할 수 있습니다.
 - 로컬 저장만 사용하며 로그인, 자동 메일, 업무 확정, 외부 업로드는 없습니다.
@@ -137,8 +137,8 @@ E2E가 완료되면 [screenshots](./apps/workbench/demo/screenshots/)도 다시 
 
 | 상태 | 화면 증거 | 기능 명세 | 통과 조건 |
 |---|---|---|---|
-| 1. 문제 입력 | [01-input-stage.png](./apps/workbench/demo/screenshots/01-input-stage.png) | 문제를 한 문장으로 입력하고 참고자료 이름을 추가한다. | 15자 미만이면 구조화하지 않고 입력 오류를 보여준다. |
-| 2. 구조화·직접 수정 | [02-structured-editing.png](./apps/workbench/demo/screenshots/02-structured-editing.png) | Step 1의 원문·참고자료를 확인하면서 5개 계약 필드를 수정한다. | 원문과 참고자료가 상단 컨텍스트 및 handoff preview에 동일하게 유지된다. |
+| 1. 문제 입력 | [01-input-stage.png](./apps/workbench/demo/screenshots/01-input-stage.png) | 문제를 한 문장으로 입력하고 참고자료 파일을 선택한다. | 15자 미만이면 구조화하지 않고 입력 오류를 보여준다. |
+| 2. 구조화·직접 수정 | [02-structured-editing.png](./apps/workbench/demo/screenshots/02-structured-editing.png) | Step 1의 원문·참고자료를 확인하면서 5개 계약 필드를 수정한다. | 원문과 참고자료의 이름·내용이 상단 컨텍스트 및 handoff preview에 유지된다. |
 | 3. handoff 승인 | [03-handoff-ready.png](./apps/workbench/demo/screenshots/03-handoff-ready.png) | 모든 필드 검증 후 사람이 검토할 handoff를 준비한다. | `Ready`, `review-only`, `Request`, `References`, `Verification`이 포함된다. |
 
 ### 화면 미리보기

@@ -14,8 +14,9 @@ Goal, Constraints, Success criteria, Anti-goals, Acceptance rubric을 사용자�
 플러그인 설치·Skill 사용법과 기능별 명세는 프로젝트 루트의
 [README](../../README.md#claude-codecodex-%ED%98%B8%ED%99%98-plugin)를 참고한다.
 
-문제 입력 단계의 원문과 참고자료는 구조화 단계 상단에 전달되고, 같은 값이
-검토용 handoff의 `Request`·`References`에 다시 포함된다.
+문제 입력 단계의 원문과 참고자료(파일명·내용)는 구조화 단계 상단에 전달되고,
+같은 값이 검토용 handoff의 `Request`·`References`에 다시 포함된다. 파일 내용은
+브라우저에서 읽어 로컬 MCP 또는 로컬 fallback handoff에만 전달된다.
 
 ## 실행
 
