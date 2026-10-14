@@ -15,6 +15,7 @@ import {
 const PORT = Number(process.env.AX_WORKBENCH_PORT || 8787);
 const MCP_VERSION = "2026-07-28";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+const WORKSPACE = path.resolve(process.env.AX_WORKBENCH_WORKSPACE || process.cwd());
 const MAX_REFERENCE_BYTES = 1_000_000;
 const referenceSchema = {
   oneOf: [
@@ -239,6 +240,7 @@ async function handleMcp(req, res) {
   if (method === "server/discover") {
     sendJson(res, 200, rpcResult(id, {
       supportedVersions: [MCP_VERSION],
+      workspace: WORKSPACE,
       capabilities: { tools: {} }
     }));
     return;

@@ -21,8 +21,9 @@ Goal, Constraints, Success criteria, Anti-goals, Acceptance rubric을 사용자�
 문제 입력 단계의 원문과 참고자료(파일명·절대경로·내용)는 구조화 단계 상단에 전달되고,
 같은 값이 검토용 handoff의 `Request`·`References`에 다시 포함된다. 파일 내용은
 브라우저에서 읽고, 절대경로는 사용자가 직접 입력한 경우에만 로컬 MCP 또는 로컬 fallback handoff에 전달된다.
-`초안 저장`을 누르면 현재 입력·참고자료·계약·화면 단계를 브라우저 localStorage에 저장하고,
-다음에 같은 브라우저에서 페이지를 열 때 이어서 수정할 수 있다.
+`초안 저장`을 누르면 현재 입력·참고자료·계약·화면 단계를 현재 작업 디렉터리 범위의
+Draft 목록에 저장한다. 상단 4번째 `저장된 Draft` 탭에서 여러 Draft를 열거나 삭제할 수 있다.
+다음에 같은 Workspace에서 페이지를 열 때 마지막 Draft를 이어서 수정할 수 있다.
 
 ## 실행
 
@@ -54,7 +55,7 @@ http://127.0.0.1:8787/apps/workbench/demo/mvp.html
 
 서버는 정적 MVP와 `POST /mcp`를 함께 제공한다. 제공하는 도구는 다음 네 가지다.
 
-- `ax_read_reference`: 사용자가 승인한 절대경로 또는 업로드 HTML을 읽고 Markdown으로 변환
+- `ax_read_reference`: 사용자가 승인한 절대경로 또는 업로드 HTML/YAML을 읽고 Markdown으로 변환
 - `ax_structure_problem`: 문제와 참고자료를 5-field 초안으로 구조화
 - `ax_validate_contract`: 사용자가 직접 수정한 5-field 계약 검증
 - `ax_create_handoff`: 검토된 계약을 Markdown handoff 문서로 생성

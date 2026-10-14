@@ -12,3 +12,4 @@ Explain that the plugin is local and review-only.
 - Codex: add the plugin root to the configured plugin directory or local marketplace, then start a new session so the root `plugin.json` and `mcp.json` are loaded.
 - The reusable workflow is the `ax-workflow` skill. It uses the three MCP tools to structure, validate, and create a review-only handoff.
 - The plugin does not send mail, confirm work, or execute an agent command.
+- Start the local preview from the project directory you are working in; its Draft list is scoped to that directory. Set `AX_WORKBENCH_WORKSPACE` only when an explicit scope is needed.

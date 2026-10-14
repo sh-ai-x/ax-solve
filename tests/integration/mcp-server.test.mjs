@@ -32,6 +32,7 @@ after(async () => {
 test("MCP discovery exposes the supported protocol and tools", async () => {
   const discovery = await rpc("server/discover");
   assert.deepEqual(discovery.result.supportedVersions, ["2026-07-28"]);
+  assert.equal(discovery.result.workspace, process.cwd());
 
   const list = await rpc("tools/list");
   assert.deepEqual(list.result.tools.map((tool) => tool.name), [
