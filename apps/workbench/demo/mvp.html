@@ -261,6 +261,10 @@
       $("#saveHint").textContent = "초안 저장됨 · 이 브라우저에만 보관";
     }
 
+    function markUnsaved() {
+      $("#saveHint").textContent = "저장되지 않은 변경사항";
+    }
+
     function saveDraftFromUi() {
       state.request = $("#request").value.trim();
       if (!$("#resultView").classList.contains("show")) state.refs = collectRefs();
@@ -322,7 +326,7 @@
         const row = document.createElement("div"); row.className = "reference-item"; row.dataset.refIndex = index;
         const button = document.createElement("button"); button.className = "chip"; button.type = "button"; button.dataset.remove = reference.name; button.dataset.refIndex = index; button.textContent = `＋ ${reference.name}`;
         const path = document.createElement("input"); path.className = "reference-path"; path.type = "text"; path.placeholder = "절대경로 (선택)"; path.value = reference.path; path.setAttribute("aria-label", `${reference.name} 절대경로`);
-        path.addEventListener("input", (event) => { state.refs[index] = { ...normalizeReference(state.refs[index]), path: event.target.value }; saveDraft(); });
+        path.addEventListener("input", (event) => { state.refs[index] = { ...normalizeReference(state.refs[index]), path: event.target.value }; markUnsaved(); });
         row.append(button, path); list.appendChild(row);
       });
       const add = document.createElement("button"); add.className = "chip"; add.type = "button"; add.id = "addFile"; add.textContent = "＋ 자료 추가"; add.addEventListener("click", () => $("#fileInput").click()); list.appendChild(add);
@@ -409,7 +413,7 @@
         textarea.setAttribute("aria-label", `Markdown 참고자료 · ${reference.name}`);
         textarea.addEventListener("input", (event) => {
           state.refs[index] = { ...normalizeReference(state.refs[index]), content: event.target.value };
-          state.approved = false; state.stage = "frame"; saveDraft(); renderHandoff();
+          state.approved = false; state.stage = "frame"; markUnsaved(); renderHandoff();
         });
         block.append(label, textarea); editor.append(block);
       });
@@ -457,12 +461,12 @@
       if (request.length < 15) { $("#inputError").textContent = "문제를 15자 이상 입력해 주세요."; $("#request").focus(); return; }
       const button = $("#analyze"); button.disabled = true;
       await referenceRead;
-      state.request = request; state.refs = await readReferencesWithMcp(collectRefs()); state.contract = await structureWithMcp(request, state.refs); state.approved = false; openResult(); saveDraft(); button.disabled = false;
+      state.request = request; state.refs = await readReferencesWithMcp(collectRefs()); state.contract = await structureWithMcp(request, state.refs); state.approved = false; openResult(); button.disabled = false;
       notify(mcpConnected ? "MCP가 문제를 구조화했습니다. 각 항목을 직접 수정하세요." : "로컬 초안을 만들었습니다. 각 항목을 직접 수정하세요.");
     });
 
-    $$("[data-field] textarea").forEach((textarea) => textarea.addEventListener("input", (event) => { state.contract[event.target.closest("[data-field]").dataset.field] = event.target.value; state.approved = false; state.stage = "frame"; saveDraft(); renderContract(); }));
-    $("#back").addEventListener("click", () => { state.stage = "request"; $("#resultView").classList.remove("show"); $("#inputView").classList.remove("hide"); setStep("request"); saveDraft(); notify("문제 입력을 수정할 수 있습니다."); });
+    $$("[data-field] textarea").forEach((textarea) => textarea.addEventListener("input", (event) => { state.contract[event.target.closest("[data-field]").dataset.field] = event.target.value; state.approved = false; state.stage = "frame"; markUnsaved(); renderContract(); }));
+    $("#back").addEventListener("click", () => { state.stage = "request"; $("#resultView").classList.remove("show"); $("#inputView").classList.remove("hide"); setStep("request"); markUnsaved(); notify("문제 입력을 수정할 수 있습니다."); });
     $("#saveDraftInput").addEventListener("click", saveDraftFromUi);
     $("#saveDraftResult").addEventListener("click", saveDraftFromUi);
     $("#copy").addEventListener("click", copyHandoff);
@@ -479,7 +483,7 @@
           setMcpStatus("offline", "Local fallback · MCP 재연결 필요");
         }
       }
-      state.approved = true; state.stage = "handoff"; saveDraft(); setStep("handoff"); $("#success").textContent = "✓ 준비 완료"; $("#handoffBadge").textContent = "Ready"; notify("handoff를 실행할 준비가 되었습니다.");
+      state.approved = true; state.stage = "handoff"; markUnsaved(); setStep("handoff"); $("#success").textContent = "✓ 준비 완료"; $("#handoffBadge").textContent = "Ready"; notify("handoff를 실행할 준비가 되었습니다.");
     });
     $("#addFile").addEventListener("click", () => $("#fileInput").click());
     $("#fileInput").addEventListener("change", (event) => {
@@ -490,7 +494,7 @@
         const existing = collectRefs();
         const added = await Promise.all(files.map(async (file) => ({ name: file.name, content: await file.text() })));
         state.refs = [...existing, ...added];
-        renderRefList(); saveDraft(); event.target.value = "";
+        renderRefList(); markUnsaved(); event.target.value = "";
         notify("파일 이름과 내용을 로컬 참고자료로 추가했습니다.");
       }).catch(() => notify("파일 내용을 읽지 못했습니다."));
     });
@@ -499,7 +503,7 @@
       if (!button) return;
       const index = Number(button.dataset.refIndex);
       if (!Number.isInteger(index)) return;
-      state.refs.splice(index, 1); renderRefList(); saveDraft();
+      state.refs.splice(index, 1); renderRefList(); markUnsaved();
     });
 
     try {
