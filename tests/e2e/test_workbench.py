@@ -77,6 +77,7 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
             "mimeType": "text/plain",
             "buffer": b"Decision: review the draft by Friday.",
         })
+        page.get_by_role("textbox", name="decisions.txt 절대경로").fill("/tmp/decisions.txt")
         page.get_by_role("button", name="문제 구조화하기").click()
         expect(page.get_by_text("구조화 단계 · 직접 입력")).to_be_visible()
         expect(page.locator("#contractBadge")).to_have_text("직접 입력")
@@ -90,6 +91,7 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
         expect(page.locator("#handoffText")).to_contain_text("## Request")
         expect(page.locator("#handoffText")).to_contain_text("회의가 끝난 뒤 결정사항과 반복 업무")
         expect(page.locator("#handoffText")).to_contain_text("meeting-notes.md")
+        expect(page.locator("#handoffText")).to_contain_text("Path: /tmp/decisions.txt")
         expect(page.locator("#handoffText")).to_contain_text("Decision: review the draft by Friday.")
         expect(page.locator("#handoffText")).not_to_contain_text("/work on meeting-summary")
 

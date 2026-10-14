@@ -14,7 +14,7 @@ const referenceSchema = {
       type: "object",
       additionalProperties: false,
       required: ["name"],
-      properties: { name: { type: "string" }, content: { type: "string" } }
+      properties: { name: { type: "string" }, path: { type: "string" }, content: { type: "string" } }
     }
   ]
 };
@@ -29,7 +29,7 @@ const tools = [
       required: ["request"],
       properties: {
         request: { type: "string", minLength: 15, description: "사용자가 해결하려는 문제" },
-        refs: { type: "array", items: referenceSchema, description: "참고자료 이름과 내용" }
+        refs: { type: "array", items: referenceSchema, description: "참고자료 이름, 경로와 내용" }
       }
     }
   },
@@ -81,6 +81,7 @@ function normalizeRefs(refs) {
     if (ref && typeof ref === "object") {
       return {
         name: String(ref.name || "reference"),
+        path: typeof ref.path === "string" ? ref.path : String(ref.path ?? ""),
         content: typeof ref.content === "string" ? ref.content : String(ref.content ?? "")
       };
     }

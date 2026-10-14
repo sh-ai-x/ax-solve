@@ -19,6 +19,7 @@ function normalizeReference(ref) {
   if (!ref || typeof ref !== "object") return { name: String(ref ?? "reference"), content: "" };
   return {
     name: String(ref.name || "reference"),
+    path: typeof ref.path === "string" ? ref.path : String(ref.path ?? ""),
     content: typeof ref.content === "string" ? ref.content : String(ref.content ?? "")
   };
 }
@@ -61,9 +62,10 @@ export function createHandoff({ request = "", refs = [], contract = {} } = {}) {
   const referenceLines = refs.length
     ? refs.flatMap((ref) => {
       const reference = normalizeReference(ref);
-      if (!reference.content) return [`- ${reference.name}`];
+      const pathLine = reference.path ? [`  Path: ${reference.path}`] : [];
+      if (!reference.content) return [`- ${reference.name}`, ...pathLine];
       const fence = referenceContentFence(reference.content);
-      return [`- ${reference.name}`, `  Content:`, `  ${fence}text`, reference.content, `  ${fence}`];
+      return [`- ${reference.name}`, ...pathLine, `  Content:`, `  ${fence}text`, reference.content, `  ${fence}`];
     })
     : ["- problem statement"];
   const contractLines = FIELD_KEYS.flatMap((key) => [

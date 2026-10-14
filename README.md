@@ -9,10 +9,10 @@
 `ax-workflow` Skill을 실행하면 로컬 MVP와 HTTP MCP를 먼저 확인·실행하고,
 브라우저를 `127.0.0.1:8787`로 엽니다.
 
-- 문제 문장과 참고자료 파일을 첫 단계에서 선택합니다. 선택한 파일의 이름과 내용이 handoff에 포함됩니다.
+- 문제 문장과 참고자료 파일을 첫 단계에서 선택합니다. 선택한 파일의 이름과 내용이 handoff에 포함되며, 같은 이름의 파일은 절대경로를 추가할 수 있습니다.
 - 구조화 단계에서 `Goal`, `Constraints`, `Success criteria`, `Anti-goals`,
   `Acceptance rubric`을 직접 수정합니다.
-- 첫 단계의 원문과 참고자료(파일명·내용)는 구조화 화면과 handoff 문서의 `Request`,
+- 첫 단계의 원문과 참고자료(파일명·절대경로·내용)는 구조화 화면과 handoff 문서의 `Request`,
   `References`에 그대로 이어집니다.
 - handoff는 Markdown·JSON으로 복사하거나 다운로드할 수 있습니다.
 - 로컬 저장만 사용하며 로그인, 자동 메일, 업무 확정, 외부 업로드는 없습니다.

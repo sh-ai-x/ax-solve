@@ -65,7 +65,7 @@ test("createHandoff preserves edited contract values and readiness", () => {
 
 test("createHandoff includes reference material content", () => {
   const handoff = createHandoff({
-    refs: [{ name: "meeting-notes.md", content: "결정: 금요일까지 초안을 검토합니다." }],
+    refs: [{ name: "meeting-notes.md", path: "/tmp/meeting-notes.md", content: "결정: 금요일까지 초안을 검토합니다." }],
     contract: {
       goal: "목표",
       constraints: "제약",
@@ -76,5 +76,20 @@ test("createHandoff includes reference material content", () => {
   });
 
   assert.match(handoff.markdown, /- meeting-notes\.md/);
+  assert.match(handoff.markdown, /Path: \/tmp\/meeting-notes\.md/);
   assert.match(handoff.markdown, /결정: 금요일까지 초안을 검토합니다\./);
+});
+
+test("createHandoff disambiguates references with the same name by path", () => {
+  const handoff = createHandoff({
+    refs: [
+      { name: "notes.md", path: "/tmp/team-a/notes.md", content: "팀 A" },
+      { name: "notes.md", path: "/tmp/team-b/notes.md", content: "팀 B" }
+    ]
+  });
+
+  assert.match(handoff.markdown, /Path: \/tmp\/team-a\/notes\.md/);
+  assert.match(handoff.markdown, /Path: \/tmp\/team-b\/notes\.md/);
+  assert.match(handoff.markdown, /팀 A/);
+  assert.match(handoff.markdown, /팀 B/);
 });

@@ -44,7 +44,7 @@ test("structure tool returns a contract that the UI can edit", async () => {
     arguments: {
       request: "회의 후 결정사항과 반복 업무를 자동 정리합니다.",
       refs: [
-        { name: "meeting-notes.md", content: "결정: 금요일까지 초안을 검토합니다." },
+        { name: "meeting-notes.md", path: "/tmp/meeting-notes.md", content: "결정: 금요일까지 초안을 검토합니다." },
         { name: "slack-thread.txt", content: "담당: 민지" }
       ]
     }
@@ -52,6 +52,7 @@ test("structure tool returns a contract that the UI can edit", async () => {
 
   const value = response.result.structuredContent;
   assert.equal(value.refs.length, 2);
+  assert.equal(value.refs[0].path, "/tmp/meeting-notes.md");
   assert.equal(value.refs[0].content, "결정: 금요일까지 초안을 검토합니다.");
   assert.match(value.contract.goal, /회의 후 결정사항/);
   assert.match(value.contract.constraints, /slack-thread\.txt/);
@@ -76,11 +77,12 @@ test("validate and handoff tools preserve edited values", async () => {
     name: "ax_create_handoff",
     arguments: {
       request: "회의 정리",
-      refs: [{ name: "notes.md", content: "결정: 다음 주에 다시 확인" }],
+      refs: [{ name: "notes.md", path: "/tmp/notes.md", content: "결정: 다음 주에 다시 확인" }],
       contract
     }
   });
   assert.match(handoff.result.structuredContent.markdown, /직접 수정한 목표/);
+  assert.match(handoff.result.structuredContent.markdown, /Path: \/tmp\/notes\.md/);
   assert.match(handoff.result.structuredContent.markdown, /결정: 다음 주에 다시 확인/);
   assert.match(handoff.result.structuredContent.markdown, /ready for human review/);
 });
