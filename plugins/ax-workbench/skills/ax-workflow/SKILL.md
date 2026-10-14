@@ -13,6 +13,7 @@ Use this skill to move one problem through a small, reviewable workflow:
 
 - Ask for one problem sentence and the names of the materials needed to understand it when they are missing.
 - Keep the original request and reference names in every downstream result.
+- When a user provides an authorized local path, call `ax_read_reference` before structuring; it converts HTML references to Markdown.
 - Do not send email, create or confirm tasks, post to Slack, commit code, or transmit source material externally.
 - Do not execute the user's workflow or invent an execution command. Starting the documented local preview is the only automatic setup action.
 - Keep the preview bound to `127.0.0.1`; do not bind it to `0.0.0.0`, deploy it, or expose source material remotely.
@@ -27,7 +28,7 @@ Use this skill to move one problem through a small, reviewable workflow:
    - Verify the page returns HTTP 200 and verify `POST http://127.0.0.1:8787/mcp` with the local `server/discover` request. Do not treat a process start alone as success.
    - Report the URL and whether the page shows the literal `MCP 연결됨` status before continuing.
    - If those project files are absent, do not guess a path or start a remote service. Continue with the bundled plugin MCP and clearly report that the browser preview could not be opened.
-2. Call `ax_structure_problem` with the user's sentence and reference names. The host may expose the tool with a plugin namespace; use the bundled AX Workbench server's `ax_structure_problem` tool.
+2. If reference paths are provided, call `ax_read_reference` for each path. Then call `ax_structure_problem` with the user's sentence and the resulting references. The host may expose the tools with a plugin namespace; use the bundled AX Workbench server.
 3. Present the original `Request`, `References`, and all five draft fields in Korean:
    - `Goal`
    - `Constraints`

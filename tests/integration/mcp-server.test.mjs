@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import test, { after, before } from "node:test";
+import os from "node:os";
+import path from "node:path";
 import { createServer } from "../../apps/workbench/mcp/server.mjs";
 
 let server;
@@ -32,10 +35,39 @@ test("MCP discovery exposes the supported protocol and tools", async () => {
 
   const list = await rpc("tools/list");
   assert.deepEqual(list.result.tools.map((tool) => tool.name), [
+    "ax_read_reference",
     "ax_structure_problem",
     "ax_validate_contract",
     "ax_create_handoff"
   ]);
+});
+
+test("read reference tool converts local HTML to Markdown", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "ax-workbench-"));
+  const filePath = path.join(directory, "meeting.html");
+  await writeFile(filePath, "<h1>회의 결정</h1><p><strong>금요일</strong>까지 검토합니다.</p>", "utf8");
+
+  try {
+    const response = await rpc("tools/call", {
+      name: "ax_read_reference",
+      arguments: { path: filePath }
+    });
+    const value = response.result.structuredContent;
+    assert.equal(value.name, "meeting.html");
+    assert.equal(value.path, filePath);
+    assert.equal(value.format, "markdown");
+    assert.match(value.content, /# 회의 결정/);
+    assert.match(value.content, /\*\*금요일\*\*까지 검토합니다\./);
+
+    const rejected = await rpc("tools/call", {
+      name: "ax_read_reference",
+      arguments: { path: "meeting.html" }
+    });
+    assert.equal(rejected.result.isError, true);
+    assert.match(rejected.result.content[0].text, /absolute path/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test("structure tool returns a contract that the UI can edit", async () => {

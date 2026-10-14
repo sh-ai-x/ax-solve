@@ -330,6 +330,21 @@
       return deriveContract(request, refs);
     }
 
+    async function readReferenceWithMcp(ref) {
+      if (!mcpConnected || !ref.path) return ref;
+      try {
+        const result = await callMcpTool("ax_read_reference", { path: ref.path });
+        if (typeof result.content === "string") return { ...ref, name: result.name || ref.name, path: result.path || ref.path, content: result.content };
+      } catch {
+        notify(`${ref.path}를 MCP에서 읽지 못해 업로드된 본문을 사용합니다.`);
+      }
+      return ref;
+    }
+
+    async function readReferencesWithMcp(refs) {
+      return Promise.all(refs.map((ref) => readReferenceWithMcp(ref)));
+    }
+
     async function handoffWithMcp() {
       if (mcpConnected) {
         try {
@@ -389,7 +404,7 @@
       if (request.length < 15) { $("#inputError").textContent = "문제를 15자 이상 입력해 주세요."; $("#request").focus(); return; }
       const button = $("#analyze"); button.disabled = true;
       await referenceRead;
-      state.request = request; state.refs = collectRefs(); state.contract = await structureWithMcp(request, state.refs); state.approved = false; saveDraft(); openResult(); button.disabled = false;
+      state.request = request; state.refs = await readReferencesWithMcp(collectRefs()); state.contract = await structureWithMcp(request, state.refs); state.approved = false; saveDraft(); openResult(); button.disabled = false;
       notify(mcpConnected ? "MCP가 문제를 구조화했습니다. 각 항목을 직접 수정하세요." : "로컬 초안을 만들었습니다. 각 항목을 직접 수정하세요.");
     });
 

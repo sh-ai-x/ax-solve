@@ -1,12 +1,16 @@
 import readline from "node:readline";
+import fs from "node:fs/promises";
+import path from "node:path";
 import {
   FIELD_KEYS,
   createHandoff,
   deriveContract,
+  htmlToMarkdown,
   validateContract
 } from "./contract.mjs";
 
 const MCP_VERSION = "2025-06-18";
+const MAX_REFERENCE_BYTES = 1_000_000;
 const referenceSchema = {
   oneOf: [
     { type: "string" },
@@ -20,6 +24,16 @@ const referenceSchema = {
 };
 
 const tools = [
+  {
+    name: "ax_read_reference",
+    description: "사용자가 지정한 로컬 참고자료를 읽고 HTML이면 Markdown으로 변환한다.",
+    inputSchema: {
+      type: "object",
+      additionalProperties: false,
+      required: ["path"],
+      properties: { path: { type: "string", description: "사용자가 승인하고 입력한 절대경로" } }
+    }
+  },
   {
     name: "ax_structure_problem",
     description: "문제 원문과 참고자료를 AX Workbench의 5-field 계약 초안으로 구조화한다.",
@@ -89,6 +103,26 @@ function normalizeRefs(refs) {
   }) : [];
 }
 
+async function readReference(referencePath) {
+  if (typeof referencePath !== "string" || !path.isAbsolute(referencePath)) {
+    throw new Error("reference path must be an absolute path");
+  }
+
+  const filePath = path.resolve(referencePath);
+  const stat = await fs.stat(filePath);
+  if (!stat.isFile()) throw new Error("reference path must point to a file");
+  if (stat.size > MAX_REFERENCE_BYTES) throw new Error("reference file is too large");
+
+  const raw = await fs.readFile(filePath, "utf8");
+  const isHtml = /\.html?$/i.test(filePath);
+  return {
+    name: path.basename(filePath),
+    path: filePath,
+    content: isHtml ? htmlToMarkdown(raw) : raw,
+    format: isHtml ? "markdown" : "text"
+  };
+}
+
 function rpcResult(id, result) {
   return { jsonrpc: "2.0", id, result };
 }
@@ -102,6 +136,12 @@ function send(message) {
 }
 
 async function callTool(name, args = {}) {
+  if (name === "ax_read_reference") {
+    // shortcut: exact user-supplied paths on localhost; add an allowlist/consent token before remote use.
+    const value = await readReference(args.path);
+    return textResult(value);
+  }
+
   if (name === "ax_structure_problem") {
     if (typeof args.request !== "string" || args.request.trim().length < 15) {
       return textResult("request must be at least 15 characters", true);

@@ -12,7 +12,7 @@ Status: completed
 
 ## Acceptance Criteria
 
-- `MCP 연결됨 · 3 tools`가 보인다.
+- `MCP 연결됨 · 4 tools`가 보인다.
 - `직접 입력` 편집 화면에서 Goal 변경값이 handoff에 반영된다.
 - 빈 Acceptance rubric은 handoff 승인을 막는다.
 - `01-input-stage.png`, `02-structured-editing.png`, `03-handoff-ready.png`가 생성된다.

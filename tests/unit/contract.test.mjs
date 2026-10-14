@@ -4,8 +4,23 @@ import {
   FIELD_KEYS,
   createHandoff,
   deriveContract,
+  htmlToMarkdown,
   validateContract
 } from "../../apps/workbench/mcp/contract.mjs";
+
+test("htmlToMarkdown keeps useful structure and removes executable markup", () => {
+  const markdown = htmlToMarkdown(`
+    <script>alert('remove')</script>
+    <h1>회의 결정</h1>
+    <p>초안은 <strong>금요일</strong>까지 <a href="/review">검토</a>합니다.</p>
+    <ul><li>담당자 지정</li><li>승인 상태 확인</li></ul>
+  `);
+
+  assert.match(markdown, /# 회의 결정/);
+  assert.match(markdown, /초안은 \*\*금요일\*\*까지 \[검토\]\(\/review\)합니다\./);
+  assert.match(markdown, /- 담당자 지정/);
+  assert.doesNotMatch(markdown, /script|alert/);
+});
 
 test("deriveContract creates a meeting workflow contract from request and references", () => {
   const contract = deriveContract("회의 후 결정사항과 반복 업무를 정리하고 싶습니다.", ["meeting-notes.md"]);
