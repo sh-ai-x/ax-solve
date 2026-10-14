@@ -145,3 +145,23 @@ def test_empty_contract_field_blocks_handoff(workbench_server, chromium_executab
         expect(page.get_by_role("button", name="handoff 준비 완료")).to_be_disabled()
         expect(page.locator("#workflowStatus")).to_have_text("필수 항목을 직접 입력하세요")
         browser.close()
+
+
+def test_unsaved_result_edits_are_not_restored(workbench_server, chromium_executable):
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True, executable_path=chromium_executable)
+        page = browser.new_page()
+        page.goto(f"{workbench_server}/apps/workbench/demo/mvp.html")
+        page.locator("#request").fill("초안 저장 전 변경사항이 자동으로 복원되지 않는지 확인합니다.")
+        page.get_by_role("button", name="문제 구조화하기").click()
+        expect(page.locator("#resultView")).to_be_visible()
+
+        goal = page.locator('textarea[aria-label="Goal"]')
+        saved_goal = goal.input_value()
+        page.get_by_role("button", name="초안 저장").last.click()
+        goal.fill("저장하지 않은 임시 변경")
+        page.reload()
+
+        expect(page.locator("#resultView")).to_be_visible()
+        expect(page.locator('textarea[aria-label="Goal"]')).to_have_value(saved_goal)
+        browser.close()
