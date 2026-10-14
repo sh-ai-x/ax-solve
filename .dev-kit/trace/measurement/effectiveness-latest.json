@@ -6,24 +6,24 @@
     "session_enroll": true
   },
   "bounded_errors": [],
-  "collected_at": "2026-10-14T12:06:48.804922Z",
+  "collected_at": "2026-10-14T12:31:01.060869Z",
   "contract_version": "effectiveness-collection-v1",
   "counts": {
     "closed": 11,
     "conflicting_terminal": 0,
-    "distinct_units": 11,
-    "enrolled": 11,
+    "distinct_units": 12,
+    "enrolled": 12,
     "missing_start": 0,
-    "missing_terminal": 0,
+    "missing_terminal": 1,
     "paired": 11,
     "success": 11,
     "unexpected_units": 0,
-    "unresolved": 0
+    "unresolved": 1
   },
-  "cutoff": "2026-10-14T12:06:48.804922Z",
+  "cutoff": "2026-10-14T12:31:01.060869Z",
   "findings": [],
-  "journal_hash": "29c4aee8523bb624c4590b252923204af23d7aef06c0a3772fa8b1d36e4eabb2",
-  "journal_seq": 158,
+  "journal_hash": "476c5ad87c8527486be8f6507f7bcdd03732ed78aee76862789cd14fdff9bff0",
+  "journal_seq": 200,
   "origin": "runtime",
   "policy": {
     "coverage_threshold": 0.95
@@ -39,7 +39,7 @@
     "coverage": 1.0,
     "success": 1.0
   },
-  "readiness": "READY",
+  "readiness": "INSUFFICIENT_EVIDENCE",
   "retention_floor": "20261014",
   "root_id": "/Users/sanghee/dev/ax-solve",
   "schema_version": 1
