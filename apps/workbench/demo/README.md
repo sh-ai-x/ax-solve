@@ -17,6 +17,8 @@ Goal, Constraints, Success criteria, Anti-goals, Acceptance rubric을 사용자�
 문제 입력 단계의 원문과 참고자료(파일명·절대경로·내용)는 구조화 단계 상단에 전달되고,
 같은 값이 검토용 handoff의 `Request`·`References`에 다시 포함된다. 파일 내용은
 브라우저에서 읽고, 절대경로는 사용자가 직접 입력한 경우에만 로컬 MCP 또는 로컬 fallback handoff에 전달된다.
+`초안 저장`을 누르면 현재 입력·참고자료·계약·화면 단계를 브라우저 localStorage에 저장하고,
+다음에 같은 브라우저에서 페이지를 열 때 이어서 수정할 수 있다.
 
 ## 실행
 
