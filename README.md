@@ -29,7 +29,6 @@ node apps/workbench/mcp/server.mjs
 브라우저:
 
 - [MVP](http://127.0.0.1:8787/apps/workbench/demo/mvp.html)
-- [UI workflow mockup](http://127.0.0.1:8787/apps/workbench/demo/index.html)
 
 기존 HTTP MCP endpoint는 `POST http://127.0.0.1:8787/mcp`입니다. 자세한 화면,
 캡처, 테스트 설명은 [demo README](./apps/workbench/demo/README.md)를 참고합니다.
@@ -141,6 +140,20 @@ E2E가 완료되면 [screenshots](./apps/workbench/demo/screenshots/)도 다시 
 | 1. 문제 입력 | [01-input-stage.png](./apps/workbench/demo/screenshots/01-input-stage.png) | 문제를 한 문장으로 입력하고 참고자료 이름을 추가한다. | 15자 미만이면 구조화하지 않고 입력 오류를 보여준다. |
 | 2. 구조화·직접 수정 | [02-structured-editing.png](./apps/workbench/demo/screenshots/02-structured-editing.png) | Step 1의 원문·참고자료를 확인하면서 5개 계약 필드를 수정한다. | 원문과 참고자료가 상단 컨텍스트 및 handoff preview에 동일하게 유지된다. |
 | 3. handoff 승인 | [03-handoff-ready.png](./apps/workbench/demo/screenshots/03-handoff-ready.png) | 모든 필드 검증 후 사람이 검토할 handoff를 준비한다. | `Ready`, `review-only`, `Request`, `References`, `Verification`이 포함된다. |
+
+### 화면 미리보기
+
+#### 1. 문제 입력
+
+![문제 입력 화면](./apps/workbench/demo/screenshots/01-input-stage.png)
+
+#### 2. 구조화·직접 수정
+
+![구조화·직접 수정 화면](./apps/workbench/demo/screenshots/02-structured-editing.png)
+
+#### 3. handoff 승인
+
+![handoff 승인 화면](./apps/workbench/demo/screenshots/03-handoff-ready.png)
 
 ### 기능별 동작
 
