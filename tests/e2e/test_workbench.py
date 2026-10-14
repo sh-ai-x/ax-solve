@@ -72,6 +72,13 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
         page.goto(f"{workbench_server}/apps/workbench/demo/mvp.html")
 
         expect(page.locator("#mcpStatus")).to_have_text("MCP 연결됨 · 4 tools")
+        draft_request = "저장 후 다시 열어도 이어서 수정할 수 있는 회의 자동화 초안입니다."
+        page.locator("#request").fill(draft_request)
+        page.get_by_role("button", name="초안 저장").first.click()
+        page.reload()
+        expect(page.locator("#request")).to_have_value(draft_request)
+        page.locator("#request").fill("회의가 끝난 뒤 결정사항과 반복 업무를 매번 수동으로 정리하고 있어요. 회의록과 Slack 대화를 바탕으로 다음 업무를 자동화하고 싶습니다.")
+
         reference_path = tmp_path / "decisions.html"
         reference_path.write_text("<h1>Decision</h1><p>Review the draft by Friday.</p>", encoding="utf-8")
         page.locator("#fileInput").set_input_files({
@@ -94,6 +101,10 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
 
         goal = page.locator('textarea[aria-label="Goal"]')
         goal.fill("사용자가 직접 고친 목표")
+        page.get_by_role("button", name="초안 저장").last.click()
+        page.reload()
+        goal = page.locator('textarea[aria-label="Goal"]')
+        expect(goal).to_have_value("사용자가 직접 고친 목표")
         expect(page.locator("#handoffText")).to_contain_text("사용자가 직접 고친 목표")
         expect(page.locator("#handoffText")).to_contain_text("## Request")
         expect(page.locator("#handoffText")).to_contain_text("회의가 끝난 뒤 결정사항과 반복 업무")
