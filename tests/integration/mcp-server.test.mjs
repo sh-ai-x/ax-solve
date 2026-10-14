@@ -74,6 +74,14 @@ test("read reference tool converts local HTML to Markdown", async () => {
     assert.match(uploaded.result.structuredContent.content, /## 업로드 결정/);
     assert.match(uploaded.result.structuredContent.content, /\*\*검토 완료\*\*/);
     assert.doesNotMatch(uploaded.result.structuredContent.content, /<h2>|<p>/);
+
+    const yaml = await rpc("tools/call", {
+      name: "ax_read_reference",
+      arguments: { name: "decisions.yaml", content: "title: 회의 결정\nowners:\n  - 민지" }
+    });
+    assert.equal(yaml.result.structuredContent.format, "markdown");
+    assert.match(yaml.result.structuredContent.content, /^```yaml/);
+    assert.match(yaml.result.structuredContent.content, /title: 회의 결정/);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

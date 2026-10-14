@@ -108,6 +108,13 @@ test("plugin read tool converts an authorized local HTML path", async () => {
     });
     assert.match(uploaded.result.structuredContent.content, /## Uploaded/);
     assert.doesNotMatch(uploaded.result.structuredContent.content, /<h2>|<p>/);
+
+    const yaml = await server.request(3, "tools/call", {
+      name: "ax_read_reference",
+      arguments: { name: "decisions.yml", content: "title: Uploaded decision\nowner: 민지" }
+    });
+    assert.equal(yaml.result.structuredContent.format, "markdown");
+    assert.match(yaml.result.structuredContent.content, /^```yaml/);
   } finally {
     server.child.kill();
     fs.rmSync(directory, { recursive: true, force: true });
