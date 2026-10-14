@@ -5,11 +5,13 @@ Skill을 하나로 묶은 로컬 plugin입니다.
 
 ## Included
 
-- `ax-workflow` skill: localhost MVP/MCP 확인 → 문제 원문 → 5-field 구조화 →
+- `ax-workflow` skill: localhost MVP/MCP 확인 → 문제 원문 → HTML/YAML 참고자료를 Markdown으로 변환 → 5-field 구조화 →
   사용자 수정 → 검증 → review-only handoff
 - `setup` skill: 로컬 plugin 로딩 안내
 - `ax_workbench` stdio MCP server
 - `ax_read_reference`, `ax_structure_problem`, `ax_validate_contract`, `ax_create_handoff`
+- HTML/YAML 변환 결과와 5-field 계약 직접 수정, 저장 버튼 기반 Draft 반영
+- Claude Code/Codex 작업 디렉터리별 여러 Draft 저장·열기·삭제
 
 ## Local test
 
@@ -41,7 +43,7 @@ Claude Code에서 Skill을 직접 호출하려면 다음을 사용합니다.
 /ax-workbench:ax-workflow
 ```
 
-사용 흐름은 `Request → Structure → Human edit → Validate → Review-only handoff`이며,
+사용 흐름은 `Request → Reference Markdown → Structure → Human edit → Validate → Review-only handoff`이며,
 MCP가 제공하는 네 도구는 `ax_read_reference`, `ax_structure_problem`,
 `ax_validate_contract`, `ax_create_handoff`입니다. `ax_read_reference`는 사용자가
 승인한 로컬 경로나 업로드한 HTML/YAML 참고자료를 Markdown으로 변환합니다.
@@ -57,3 +59,5 @@ HTTP MCP discovery와 화면의 `MCP 연결됨` 상태를 확인한 후 문제 �
 
 로컬 preview를 실행한 현재 작업 디렉터리가 Draft 저장 범위가 됩니다. Claude Code나
 Codex에서 다른 프로젝트 경로로 plugin을 사용하면 해당 경로의 Draft 목록이 분리됩니다.
+여러 Draft는 화면의 네 번째 `저장된 Draft` 탭에서 열거나 삭제할 수 있고, 참고자료
+Markdown과 계약 필드는 `초안 저장`을 눌렀을 때만 해당 Draft에 반영됩니다.

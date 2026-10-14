@@ -164,6 +164,7 @@ def test_multiple_drafts_are_manageable_in_workspace_scope(workbench_server, chr
         expect(page.locator("#draftList .draft-item")).to_have_count(2)
         page.locator("#draftList .draft-item").first.get_by_role("button", name="열기").click()
         expect(page.locator("#request")).to_have_value("두 번째 작업 디렉터리 초안입니다.")
+        expect(page.locator("#savedDraftsView")).not_to_be_visible()
         page.get_by_role("button", name="저장된 Draft").click()
         page.on("dialog", lambda dialog: dialog.accept())
         page.locator("#draftList .draft-item").last.get_by_role("button", name="삭제").click()

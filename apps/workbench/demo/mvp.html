@@ -627,7 +627,7 @@
 
     function openResult() {
       if (state.stage === "request") state.stage = "frame";
-      $("#inputView").classList.add("hide"); $("#resultView").classList.add("show"); setStep("frame"); renderContract();
+      $("#inputView").classList.add("hide"); $("#savedDraftsView").classList.remove("show"); $("#resultView").classList.add("show"); setStep("frame"); renderContract();
     }
 
     function download(filename, content, type) {

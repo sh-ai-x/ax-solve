@@ -5,11 +5,12 @@
 
 ## 현재 구현
 
-`문제 입력 → 구조화 → 직접 수정 → 검증 → 검토용 handoff` 흐름을 제공하며, 저장된 Draft를 여러 개 관리할 수 있습니다.
+`문제 입력 → 참고자료 Markdown 변환 → 구조화·직접 수정 → 검증 → 검토용 handoff` 흐름을 제공하며, 저장된 Draft를 여러 개 관리할 수 있습니다.
 `ax-workflow` Skill을 실행하면 로컬 MVP와 HTTP MCP를 먼저 확인·실행하고,
 브라우저를 `127.0.0.1:8787`로 엽니다.
 
-- 문제 문장과 참고자료 파일을 첫 단계에서 선택합니다. 선택한 파일의 이름과 내용이 handoff에 포함되며, 같은 이름의 파일은 절대경로를 추가할 수 있습니다.
+- 문제 문장과 참고자료 파일을 첫 단계에서 선택합니다. HTML/YAML 참고자료는 MCP가 Markdown으로 변환한 뒤 불러오며, 같은 이름의 파일은 절대경로를 추가할 수 있습니다.
+- 구조화 단계에서 변환된 참고자료 Markdown을 직접 수정할 수 있고, 수정한 내용은 handoff와 저장할 Draft에 반영됩니다.
 - 구조화 단계에서 `Goal`, `Constraints`, `Success criteria`, `Anti-goals`,
   `Acceptance rubric`을 직접 수정합니다.
 - 첫 단계의 원문과 참고자료(파일명·절대경로·내용)는 구조화 화면과 handoff 문서의 `Request`,
@@ -127,7 +128,7 @@ npm test
 - Unit: 계약 생성·검증·handoff 값 보존
 - Integration: 기존 HTTP MCP discovery와 UI 제공
 - Plugin: portable/Claude/Codex manifest, skill, stdio MCP handshake와 tool 호출
-- E2E: 문제 입력 → 구조화 원문 연결 → 직접 수정 → handoff → 빈 필드 차단
+- E2E: HTML/YAML → Markdown 변환 → 참고자료·계약 직접 수정 → handoff → 여러 Draft 저장·열기·삭제 → 빈 필드 차단
 
 E2E가 완료되면 [screenshots](./apps/workbench/demo/screenshots/)도 다시 생성합니다.
 
@@ -138,32 +139,40 @@ E2E가 완료되면 [screenshots](./apps/workbench/demo/screenshots/)도 다시 
 
 | 상태 | 화면 증거 | 기능 명세 | 통과 조건 |
 |---|---|---|---|
-| 1. 문제 입력 | [01-input-stage.png](./apps/workbench/demo/screenshots/01-input-stage.png) | 문제를 한 문장으로 입력하고 참고자료 파일을 선택한다. | 15자 미만이면 구조화하지 않고 입력 오류를 보여준다. |
-| 2. 구조화·직접 수정 | [02-structured-editing.png](./apps/workbench/demo/screenshots/02-structured-editing.png) | Step 1의 원문·참고자료를 확인하면서 5개 계약 필드를 수정한다. | 원문과 참고자료의 이름·내용이 상단 컨텍스트 및 handoff preview에 유지된다. |
-| 3. handoff 승인 | [03-handoff-ready.png](./apps/workbench/demo/screenshots/03-handoff-ready.png) | 모든 필드 검증 후 사람이 검토할 handoff를 준비한다. | `Ready`, `review-only`, `Request`, `References`, `Verification`이 포함된다. |
+| 1. 문제 입력·참고자료 | [01-input-and-references.png](./apps/workbench/demo/screenshots/01-input-and-references.png) | 문제와 HTML/YAML 참고자료를 선택하고, 중복 파일을 구분할 절대경로를 입력한다. | 선택한 파일명과 절대경로가 구조화 단계로 전달된다. |
+| 2. Markdown·초안 직접 수정 | [02-markdown-editing.png](./apps/workbench/demo/screenshots/02-markdown-editing.png) | MCP가 HTML/YAML을 Markdown으로 바꾼 결과와 5개 계약 필드를 직접 수정한다. | HTML 태그·YAML 원문 대신 편집 가능한 Markdown이 보이고 handoff에 반영된다. |
+| 3. 여러 Draft 관리 | [03-saved-drafts.png](./apps/workbench/demo/screenshots/03-saved-drafts.png) | 현재 Claude Code/Codex 작업 디렉터리 범위의 Draft를 여러 개 저장·열기·삭제한다. | 네 번째 `저장된 Draft` 탭에 2개 이상의 Draft와 Workspace 경로가 표시된다. |
+| 4. handoff 승인 | [04-handoff-ready.png](./apps/workbench/demo/screenshots/04-handoff-ready.png) | 직접 수정한 초안을 검증하고 사람이 검토할 handoff를 준비한다. | `Ready`, `review-only`, `Request`, `References`, `Verification`이 포함된다. |
 
 ### 화면 미리보기
 
-#### 1. 문제 입력
+#### 1. 문제 입력·참고자료
 
-![문제 입력 화면](./apps/workbench/demo/screenshots/01-input-stage.png)
+![문제 입력과 HTML/YAML 참고자료](./apps/workbench/demo/screenshots/01-input-and-references.png)
 
-#### 2. 구조화·직접 수정
+#### 2. Markdown·초안 직접 수정
 
-![구조화·직접 수정 화면](./apps/workbench/demo/screenshots/02-structured-editing.png)
+![Markdown 변환과 직접 수정](./apps/workbench/demo/screenshots/02-markdown-editing.png)
 
-#### 3. handoff 승인
+#### 3. 여러 Draft 관리
 
-![handoff 승인 화면](./apps/workbench/demo/screenshots/03-handoff-ready.png)
+![여러 Draft 관리](./apps/workbench/demo/screenshots/03-saved-drafts.png)
+
+#### 4. handoff 승인
+
+![handoff 승인 화면](./apps/workbench/demo/screenshots/04-handoff-ready.png)
 
 ### 기능별 동작
 
 | 기능 | 동작 | 데이터 경계 |
 |---|---|---|
+| 참고자료 변환 | HTML/YAML 업로드 또는 사용자가 승인한 절대경로를 `ax_read_reference`로 읽어 Markdown으로 변환 | 로컬 MCP 요청만 사용 |
 | 문제 입력 | 현재 작업 디렉터리별 Draft 목록에 초안을 저장하고 구조화 단계로 전달 | 외부 업로드 없음 |
+| Markdown 편집 | 변환된 참고자료와 5개 계약 필드를 브라우저에서 직접 수정 | 저장 버튼을 누르기 전 변경은 Draft에 반영하지 않음 |
 | 구조화 | MCP가 초안을 만들고 사용자가 직접 편집 | MCP 초안은 확정값이 아님 |
 | 검증 | 5개 필드가 비어 있는지 확인 | 누락 시 handoff 버튼 차단 |
 | handoff | Markdown·JSON 복사/다운로드 | 자동 실행·메일·업무 확정 없음 |
+| 여러 Draft | `저장된 Draft` 탭에서 Workspace별 Draft를 열고 삭제 | 브라우저 localStorage 범위이며 외부 저장소 없음 |
 | plugin skill | 동일한 Request·References·Contract workflow를 Claude Code/Codex에서 안내 | 검토용 문서만 생성 |
 
 ## 다음 단계

@@ -11,8 +11,13 @@ Goal, Constraints, Success criteria, Anti-goals, Acceptance rubric을 사용자�
 프로젝트 루트의 [plugins/ax-workbench](../../plugins/ax-workbench)에 별도로
 제공하며, MCP가 없을 때는 브라우저 내부의 local fallback으로 동작한다.
 
+HTML과 YAML 참고자료는 MCP의 `ax_read_reference`를 거쳐 Markdown으로 변환한
+뒤 구조화 단계에 표시된다. 변환된 Markdown과 5-field 계약은 모두 직접 수정할
+수 있으며, 저장 버튼을 누른 내용만 Draft에 반영된다.
+
 참고자료를 구조화하면 변환된 Markdown을 `참고자료 Markdown 직접 수정` 영역에서
-검토·수정할 수 있다. 수정한 본문은 handoff에 즉시 반영되며, `초안 저장` 버튼을
+검토·수정할 수 있다. HTML 태그와 YAML 원문은 handoff에 그대로 들어가지 않고
+Markdown으로 정규화된다. 수정한 본문은 handoff에 즉시 반영되며, `초안 저장` 버튼을
 눌렀을 때만 저장된 초안에 반영된다.
 
 플러그인 설치·Skill 사용법과 기능별 명세는 프로젝트 루트의
@@ -27,10 +32,10 @@ Draft 목록에 저장한다. 상단 4번째 `저장된 Draft` 탭에서 여러 
 
 ## 실행
 
-브라우저에서 [index.html](./index.html)을 연다.
+브라우저에서 [mvp.html](./mvp.html)을 연다.
 
 ```bash
-open apps/workbench/demo/index.html
+open apps/workbench/demo/mvp.html
 ```
 
 최소 MVP 화면만 열기:
@@ -65,19 +70,23 @@ http://127.0.0.1:8787/apps/workbench/demo/mvp.html
 
 ## 화면 캡처
 
-테스트가 검증하는 세 가지 핵심 상태를 캡처해 저장했다.
+테스트가 검증하는 네 가지 핵심 상태를 캡처해 저장했다.
 
-### 1. 문제 입력
+### 1. 문제 입력·HTML/YAML 참고자료
 
-![문제 입력 단계](./screenshots/01-input-stage.png)
+![문제 입력과 참고자료](./screenshots/01-input-and-references.png)
 
-### 2. 구조화 단계 직접 수정
+### 2. Markdown·초안 직접 수정
 
-![구조화 단계 직접 수정](./screenshots/02-structured-editing.png)
+![Markdown 변환과 직접 수정](./screenshots/02-markdown-editing.png)
 
-### 3. Handoff 승인 완료
+### 3. 여러 Draft 관리
 
-![Handoff 승인 완료](./screenshots/03-handoff-ready.png)
+![여러 Draft 관리](./screenshots/03-saved-drafts.png)
+
+### 4. Handoff 승인 완료
+
+![Handoff 승인 완료](./screenshots/04-handoff-ready.png)
 
 ## 테스트 실행
 
@@ -92,9 +101,9 @@ npm test
 
 - Unit: 계약 초안, 누락 필드 검증, 직접 수정값 보존, handoff readiness
 - Integration: MCP discovery, 3개 tool 호출, 정적 MVP와 MCP endpoint 동시 제공
-- E2E: 브라우저 MCP 연결, 구조화 단계 직접 입력·수정, handoff 승인, 빈 필드 차단
+- E2E: 브라우저 MCP 연결, HTML/YAML → Markdown 변환, 참고자료·계약 직접 수정, handoff 승인, 여러 Draft 관리, 빈 필드 차단
 
-`npm run test:e2e`와 `npm test`는 E2E 검증 후 screenshot도 다시 생성한다.
+`npm run test:e2e`와 `npm test`는 E2E 검증 후 기존 PNG를 비우고 screenshot도 다시 생성한다.
 화면 캡처만 다시 만들려면 다음을 실행한다.
 
 ```bash
@@ -122,9 +131,11 @@ python3 tests/e2e/capture_screenshots.py
 
 완료:
 
-1. 5-field 직접 입력·수정 UI
-2. local MCP 구조화·검증·handoff 연결
-3. unit/integration/e2e 테스트와 screenshot 회귀 증거
+1. HTML/YAML 참고자료의 Markdown 변환과 직접 수정 UI
+2. 5-field 직접 입력·수정 및 저장 버튼 기반 Draft 반영
+3. Workspace별 여러 Draft 저장·열기·삭제 UI
+4. local MCP 구조화·검증·handoff 연결
+5. unit/integration/e2e 테스트와 screenshot 회귀 증거
 
 다음 단계:
 
