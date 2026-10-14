@@ -6,6 +6,7 @@ import {
   createHandoff,
   deriveContract,
   htmlToMarkdown,
+  yamlToMarkdown,
   validateContract
 } from "./contract.mjs";
 
@@ -29,7 +30,7 @@ const referenceSchema = {
 const tools = [
   {
     name: "ax_read_reference",
-    description: "사용자가 승인한 절대경로 또는 업로드 본문을 읽고 HTML을 Markdown으로 변환한다.",
+    description: "사용자가 승인한 절대경로 또는 업로드 본문을 읽고 HTML/YAML을 Markdown으로 변환한다.",
     inputSchema: {
       type: "object",
       additionalProperties: false,
@@ -42,7 +43,7 @@ const tools = [
           required: ["name", "content"],
           properties: {
             name: { type: "string", description: "업로드된 참고자료 파일명" },
-            content: { type: "string", description: "사용자가 업로드한 HTML 본문" }
+            content: { type: "string", description: "사용자가 업로드한 HTML 또는 YAML 본문" }
           }
         }
       ],
@@ -128,8 +129,12 @@ async function readReference(args = {}) {
     return {
       name: String(args.name || "reference.html"),
       path: "",
-      content: htmlToMarkdown(args.content),
-      format: "markdown"
+      content: /\.html?$/i.test(String(args.name || "reference.html"))
+        ? htmlToMarkdown(args.content)
+        : /\.ya?ml$/i.test(String(args.name || ""))
+          ? yamlToMarkdown(args.content)
+          : args.content,
+      format: /\.(?:html?|ya?ml)$/i.test(String(args.name || "reference.html")) ? "markdown" : "text"
     };
   }
 
@@ -145,11 +150,12 @@ async function readReference(args = {}) {
 
   const raw = await fs.readFile(filePath, "utf8");
   const isHtml = /\.html?$/i.test(filePath);
+  const isYaml = /\.ya?ml$/i.test(filePath);
   return {
     name: path.basename(filePath),
     path: filePath,
-    content: isHtml ? htmlToMarkdown(raw) : raw,
-    format: isHtml ? "markdown" : "text"
+    content: isHtml ? htmlToMarkdown(raw) : isYaml ? yamlToMarkdown(raw) : raw,
+    format: isHtml || isYaml ? "markdown" : "text"
   };
 }
 

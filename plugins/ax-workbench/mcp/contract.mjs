@@ -55,6 +55,14 @@ export function htmlToMarkdown(html) {
     .trim();
 }
 
+export function yamlToMarkdown(yaml) {
+  // shortcut: preserve arbitrary YAML syntax in Markdown; use a full YAML parser when semantic rendering is required.
+  const value = yaml.trim();
+  const longest = Math.max(...(value.match(/`+/g) || [""]).map((run) => run.length));
+  const fence = "`".repeat(Math.max(3, longest + 1));
+  return `${fence}yaml\n${value}\n${fence}`;
+}
+
 function normalizeReference(ref) {
   if (typeof ref === "string") return { name: ref, content: "" };
   if (!ref || typeof ref !== "object") return { name: String(ref ?? "reference"), content: "" };

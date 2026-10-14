@@ -85,6 +85,11 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
             "mimeType": "text/html",
             "buffer": b"<h2>Uploaded decision</h2><p><strong>Ready</strong></p>",
         })
+        page.locator("#fileInput").set_input_files({
+            "name": "decisions.yaml",
+            "mimeType": "application/yaml",
+            "buffer": b"title: YAML decision\nowner: Minji",
+        })
         page.get_by_role("button", name="문제 구조화하기").click()
         expect(page.get_by_text("구조화 단계 · 직접 입력")).to_be_visible()
         expect(page.locator("#contractBadge")).to_have_text("직접 입력")
@@ -103,6 +108,8 @@ def test_user_can_edit_contract_and_prepare_handoff(workbench_server, chromium_e
         expect(page.locator("#handoffText")).to_contain_text(f"Path: {reference_path}")
         expect(page.locator("#handoffText")).to_contain_text("## Uploaded decision")
         expect(page.locator("#handoffText")).not_to_contain_text("<h2>Uploaded decision</h2>")
+        expect(page.locator("#handoffText")).to_contain_text("```yaml")
+        expect(page.locator("#handoffText")).to_contain_text("title: YAML decision")
         expect(page.locator("#handoffText")).not_to_contain_text("/work on meeting-summary")
 
         page.get_by_role("button", name="handoff 준비 완료").click()

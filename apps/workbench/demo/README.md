@@ -48,7 +48,7 @@ http://127.0.0.1:8787/apps/workbench/demo/mvp.html
 
 서버는 정적 MVP와 `POST /mcp`를 함께 제공한다. 제공하는 도구는 다음 네 가지다.
 
-- `ax_read_reference`: 사용자가 승인한 절대경로 또는 업로드 HTML을 읽고 Markdown으로 변환
+- `ax_read_reference`: 사용자가 승인한 절대경로 또는 업로드 HTML/YAML을 읽고 Markdown으로 변환
 - `ax_structure_problem`: 문제와 참고자료를 5-field 초안으로 구조화
 - `ax_validate_contract`: 사용자가 직접 수정한 5-field 계약 검증
 - `ax_create_handoff`: 검토된 계약을 Markdown handoff 문서로 생성
