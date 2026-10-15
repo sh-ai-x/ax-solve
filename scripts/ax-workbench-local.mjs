@@ -9,6 +9,7 @@ const baseUrl = `http://127.0.0.1:${port}`;
 const pageUrl = `${baseUrl}/apps/workbench/demo/mvp.html`;
 const mcpUrl = `${baseUrl}/mcp`;
 const serverPath = path.join(root, "apps/workbench/mcp/server.mjs");
+const workspace = path.resolve(process.env.AX_WORKBENCH_WORKSPACE || process.cwd());
 const logPath = path.join(process.env.TMPDIR || "/tmp", "ax-workbench-mcp.log");
 const shouldOpen = process.argv.includes("--open");
 
@@ -36,7 +37,7 @@ async function health() {
 function launchDetachedServer() {
   const logFd = fs.openSync(logPath, "a");
   const child = spawn(process.execPath, [serverPath], {
-    cwd: root,
+    cwd: workspace,
     detached: true,
     stdio: ["ignore", logFd, logFd],
     env: { ...process.env, AX_WORKBENCH_PORT: String(port) }
@@ -69,4 +70,4 @@ if (!(await waitForHealth())) {
 }
 
 if (shouldOpen) openBrowser();
-console.log(JSON.stringify({ ok: true, pageUrl, mcpUrl, reused: alreadyRunning, pid, logPath }, null, 2));
+console.log(JSON.stringify({ ok: true, pageUrl, mcpUrl, workspace, reused: alreadyRunning, pid, logPath }, null, 2));

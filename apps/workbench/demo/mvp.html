@@ -96,6 +96,20 @@
     .reference-edit label { display: block; color: #60728a; font-size: 11px; font-weight: 800; margin-bottom: 6px; }
     .reference-edit textarea { width: 100%; min-height: 450px; resize: vertical; border: 1px solid #dce4ee; border-radius: 6px; background: #fff; color: var(--ink); padding: 11px 12px; font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; outline: 0; }
     .reference-edit textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59, 117, 237, .1); }
+    .saved-drafts { display: none; }
+    .saved-drafts.show { display: block; }
+    .drafts-card { padding: 24px; }
+    .draft-scope { color: var(--muted); font-size: 11px; margin: 0; }
+    .draft-list { display: grid; gap: 9px; }
+    .draft-empty { border: 1px dashed #cbd7e5; border-radius: 8px; padding: 28px; color: var(--muted); text-align: center; font-size: 12px; }
+    .draft-item { display: flex; align-items: center; justify-content: space-between; gap: 18px; border: 1px solid #dce5ef; border-radius: 8px; background: #fbfcfe; padding: 14px 15px; }
+    .draft-item.current { border-color: #9ebcf6; background: #f7faff; }
+    .draft-item-main { min-width: 0; }
+    .draft-item-title { display: block; color: var(--ink); font-size: 12px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .draft-item-meta { display: block; color: var(--muted); font-size: 10px; line-height: 1.5; margin-top: 4px; }
+    .draft-item-actions { display: flex; gap: 7px; flex: 0 0 auto; }
+    .draft-item-actions button { border: 1px solid #dce4ee; border-radius: 6px; background: #fff; color: var(--ink); padding: 7px 10px; font-size: 10px; font-weight: 700; }
+    .draft-item-actions .delete-draft { color: var(--red); }
     .flow { border: 1px solid var(--line); background: #fbfcfe; border-radius: 8px; padding: 17px 13px 13px; display: flex; align-items: center; gap: 7px; min-height: 154px; }
     .flow-node { width: 107px; min-height: 84px; background: #fff; border: 1px solid #dce5ef; border-top: 3px solid var(--green); border-radius: 8px; padding: 10px; box-shadow: 0 5px 12px rgba(30, 50, 75, .06); }
     .flow-node.current { border-top-color: var(--blue); }
@@ -144,11 +158,12 @@
       <button class="step active" data-step="request"><span class="n">1</span>문제 입력<span class="step-note">1분</span></button>
       <button class="step" data-step="frame"><span class="n">2</span>구조화<span class="step-note">5 fields</span></button>
       <button class="step" data-step="handoff"><span class="n">3</span>실행 handoff<span class="step-note">복사·다운로드</span></button>
+      <button class="step" data-step="drafts"><span class="n">4</span>저장된 Draft<span class="step-note">관리</span></button>
     </div>
 
     <section class="card input-view" id="inputView">
       <div class="input-card">
-        <div class="card-title"><div><h2>무엇을 해결하고 싶나요?</h2><p>자료를 선택하면 파일명과 내용이 들어갑니다. 같은 이름의 파일은 절대경로를 추가하세요.</p></div><span class="badge blue">Step 1 / 3</span></div>
+        <div class="card-title"><div><h2>무엇을 해결하고 싶나요?</h2><p>자료를 선택하면 파일명과 내용이 들어갑니다. 같은 이름의 파일은 절대경로를 추가하세요.</p></div><span class="badge blue">Step 1 / 4</span></div>
         <label class="label" for="request">Problem statement</label>
         <textarea class="textarea" id="request">회의가 끝난 뒤 결정사항과 반복 업무를 매번 수동으로 정리하고 있어요. 회의록과 Slack 대화를 바탕으로 다음 업무를 자동화하고 싶습니다.</textarea>
         <label class="label" for="fileInput">Reference materials</label>
@@ -186,11 +201,20 @@
         </article>
       </div>
     </section>
+
+    <section class="saved-drafts" id="savedDraftsView">
+      <article class="card drafts-card">
+        <div class="card-title"><div><h2>저장된 Draft</h2><p class="sub">현재 작업 디렉터리에 저장된 문제·초안 목록입니다.</p></div><button class="ghost" type="button" id="newDraft">＋ 새 Draft</button></div>
+        <p class="draft-scope" id="draftScope"></p>
+        <div class="draft-list" id="draftList"></div>
+      </article>
+    </section>
   </main>
   <div class="toast" id="toast" role="status"></div>
 
   <script>
-    const STORAGE_KEY = "ax-workbench-local-mvp-v2";
+    const STORAGE_KEY = "ax-workbench-drafts-v1";
+    const LEGACY_STORAGE_KEY = "ax-workbench-local-mvp-v2";
     const fieldKeys = ["goal", "constraints", "success_criteria", "anti_goals", "acceptance_rubric"];
     const state = {
       request: "",
@@ -200,11 +224,13 @@
       ],
       contract: {},
       approved: false,
-      stage: "request"
+      stage: "request",
+      draftId: null
     };
     let mcpConnected = false;
     let mcpRequestId = 0;
     let referenceRead = Promise.resolve();
+    let workspaceScope = location.origin;
     const $ = (selector) => document.querySelector(selector);
     const $$ = (selector) => [...document.querySelectorAll(selector)];
 
@@ -246,6 +272,8 @@
     async function connectMcp() {
       setMcpStatus("", "MCP 연결 확인 중…");
       try {
+        const discovery = await mcpRequest("server/discover");
+        if (typeof discovery.workspace === "string" && discovery.workspace) workspaceScope = discovery.workspace;
         const result = await mcpRequest("tools/list");
         const count = Array.isArray(result.tools) ? result.tools.length : 0;
         mcpConnected = count > 0;
@@ -254,15 +282,173 @@
         mcpConnected = false;
         setMcpStatus("offline", "Local fallback · MCP 미연결");
       }
+      $("#draftScope").textContent = `Workspace: ${workspaceScope}`;
+    }
+
+    function scopedStorageKey(key = STORAGE_KEY) {
+      return `${key}:${encodeURIComponent(workspaceScope)}`;
+    }
+
+    function activeDraftKey() {
+      return scopedStorageKey(`${STORAGE_KEY}:active`);
+    }
+
+    function newDraftId() {
+      return `draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function draftTitle(request) {
+      const title = String(request || "").split(/\r?\n/, 1)[0].trim();
+      return title ? (title.length > 56 ? `${title.slice(0, 56)}…` : title) : "새 Draft";
+    }
+
+    function readDrafts() {
+      try {
+        const raw = localStorage.getItem(scopedStorageKey());
+        if (raw !== null) {
+          const saved = JSON.parse(raw);
+          if (Array.isArray(saved)) return saved;
+        }
+      } catch {}
+
+      try {
+        const legacy = JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEY) || "null");
+        if (legacy && typeof legacy.request === "string" && Array.isArray(legacy.refs) && legacy.contract) {
+          const migrated = { ...legacy, id: newDraftId(), title: draftTitle(legacy.request), updatedAt: Date.now() };
+          writeDrafts([migrated]);
+          return [migrated];
+        }
+      } catch {}
+      return [];
+    }
+
+    function writeDrafts(drafts) {
+      localStorage.setItem(scopedStorageKey(), JSON.stringify(drafts));
+    }
+
+    function stateAsDraft() {
+      return {
+        id: state.draftId,
+        title: draftTitle(state.request),
+        request: state.request,
+        refs: state.refs.map(normalizeReference),
+        contract: { ...state.contract },
+        approved: state.approved,
+        stage: state.stage,
+        updatedAt: Date.now()
+      };
     }
 
     function saveDraft() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      $("#saveHint").textContent = "초안 저장됨 · 이 브라우저에만 보관";
+      if (!state.draftId) state.draftId = newDraftId();
+      const drafts = readDrafts();
+      const saved = stateAsDraft();
+      const index = drafts.findIndex((draft) => draft.id === state.draftId);
+      if (index === -1) drafts.push(saved);
+      else drafts[index] = saved;
+      writeDrafts(drafts);
+      localStorage.setItem(activeDraftKey(), state.draftId);
+      $("#saveHint").textContent = "초안 저장됨 · 현재 Workspace";
     }
 
     function markUnsaved() {
       $("#saveHint").textContent = "저장되지 않은 변경사항";
+    }
+
+    function showInput() {
+      $("#inputView").classList.remove("hide");
+      $("#resultView").classList.remove("show");
+      $("#savedDraftsView").classList.remove("show");
+      $("#request").value = state.request;
+      setStep("request");
+      renderRefList();
+    }
+
+    function loadDraft(draft) {
+      state.draftId = draft.id;
+      state.request = typeof draft.request === "string" ? draft.request : "";
+      state.refs = Array.isArray(draft.refs) ? draft.refs.map(normalizeReference) : [];
+      state.contract = draft.contract && typeof draft.contract === "object" ? { ...draft.contract } : {};
+      state.approved = draft.approved === true;
+      state.stage = draft.stage || "frame";
+      localStorage.setItem(activeDraftKey(), state.draftId);
+      $("#request").value = state.request;
+      $("#saveHint").textContent = "저장된 Draft를 불러왔습니다.";
+      if (state.stage === "request") {
+        showInput();
+        return;
+      }
+      openResult();
+      state.stage = draft.stage || "frame";
+      if (state.stage === "handoff") {
+        setStep("handoff");
+        $("#success").textContent = "✓ 준비 완료";
+        $("#handoffBadge").textContent = "Ready";
+      }
+    }
+
+    function renderDraftList() {
+      const list = $("#draftList");
+      list.replaceChildren();
+      $("#draftScope").textContent = "Workspace: " + workspaceScope;
+      const drafts = readDrafts().sort((left, right) => Number(right.updatedAt || 0) - Number(left.updatedAt || 0));
+      if (!drafts.length) {
+        const empty = document.createElement("div");
+        empty.className = "draft-empty";
+        empty.textContent = "저장된 Draft가 없습니다. 문제를 입력하고 초안 저장을 눌러 주세요.";
+        list.append(empty);
+        return;
+      }
+      drafts.forEach((draft) => {
+        const item = document.createElement("div");
+        item.className = "draft-item" + (draft.id === state.draftId ? " current" : "");
+        item.dataset.draftId = draft.id;
+        const main = document.createElement("div");
+        main.className = "draft-item-main";
+        const title = document.createElement("strong");
+        title.className = "draft-item-title";
+        title.textContent = draft.title || draftTitle(draft.request);
+        const meta = document.createElement("span");
+        meta.className = "draft-item-meta";
+        const updated = draft.updatedAt ? new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" }).format(new Date(draft.updatedAt)) : "저장 시간 없음";
+        meta.textContent = updated + " · 참고자료 " + (Array.isArray(draft.refs) ? draft.refs.length : 0) + "개";
+        main.append(title, meta);
+        const actions = document.createElement("div");
+        actions.className = "draft-item-actions";
+        const open = document.createElement("button");
+        open.type = "button";
+        open.dataset.draftAction = "open";
+        open.textContent = "열기";
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "delete-draft";
+        remove.dataset.draftAction = "delete";
+        remove.textContent = "삭제";
+        actions.append(open, remove);
+        item.append(main, actions);
+        list.append(item);
+      });
+    }
+
+    function showDrafts() {
+      $("#inputView").classList.add("hide");
+      $("#resultView").classList.remove("show");
+      $("#savedDraftsView").classList.add("show");
+      setStep("drafts");
+      renderDraftList();
+    }
+
+    function resetDraft() {
+      state.draftId = null;
+      state.request = "";
+      state.refs = [];
+      state.contract = {};
+      state.approved = false;
+      state.stage = "request";
+      $("#inputError").textContent = "";
+      $("#request").value = "";
+      showInput();
+      markUnsaved();
     }
 
     function saveDraftFromUi() {
@@ -440,7 +626,7 @@
     }
 
     function openResult() {
-      state.stage = "frame";
+      if (state.stage === "request") state.stage = "frame";
       $("#inputView").classList.add("hide"); $("#resultView").classList.add("show"); setStep("frame"); renderContract();
     }
 
@@ -466,9 +652,31 @@
     });
 
     $$("[data-field] textarea").forEach((textarea) => textarea.addEventListener("input", (event) => { state.contract[event.target.closest("[data-field]").dataset.field] = event.target.value; state.approved = false; state.stage = "frame"; markUnsaved(); renderContract(); }));
-    $("#back").addEventListener("click", () => { state.stage = "request"; $("#resultView").classList.remove("show"); $("#inputView").classList.remove("hide"); setStep("request"); markUnsaved(); notify("문제 입력을 수정할 수 있습니다."); });
+    $("#back").addEventListener("click", () => { state.stage = "request"; showInput(); markUnsaved(); notify("문제 입력을 수정할 수 있습니다."); });
+    $("[data-step=\"drafts\"]").addEventListener("click", showDrafts);
     $("#saveDraftInput").addEventListener("click", saveDraftFromUi);
     $("#saveDraftResult").addEventListener("click", saveDraftFromUi);
+    $("#newDraft").addEventListener("click", resetDraft);
+    $("#draftList").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-draft-action]");
+      if (!button) return;
+      const item = button.closest("[data-draft-id]");
+      const draft = readDrafts().find((entry) => entry.id === item?.dataset.draftId);
+      if (!draft) return;
+      if (button.dataset.draftAction === "open") {
+        loadDraft(draft);
+        return;
+      }
+      if (button.dataset.draftAction === "delete" && window.confirm("이 Draft를 삭제할까요?")) {
+        writeDrafts(readDrafts().filter((entry) => entry.id !== draft.id));
+        if (state.draftId === draft.id) {
+          state.draftId = null;
+          localStorage.removeItem(activeDraftKey());
+        }
+        renderDraftList();
+        notify("Draft를 삭제했습니다.");
+      }
+    });
     $("#copy").addEventListener("click", copyHandoff);
     $("#downloadMd").addEventListener("click", async () => { download("workflow-handoff.md", await handoffWithMcp(), "text/markdown"); notify("Markdown 파일을 다운로드했습니다."); });
     $("#downloadJson").addEventListener("click", () => { download("workflow-contract.json", JSON.stringify({ request: state.request, refs: state.refs, contract: state.contract }, null, 2), "application/json"); notify("JSON 파일을 다운로드했습니다."); });
@@ -506,21 +714,16 @@
       state.refs.splice(index, 1); renderRefList(); markUnsaved();
     });
 
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-      if (saved && typeof saved.request === "string" && Array.isArray(saved.refs) && saved.contract && typeof saved.contract === "object") {
-        state.request = saved.request; state.refs = saved.refs.map(normalizeReference); state.contract = saved.contract; state.approved = saved.approved === true; state.stage = saved.stage || (Object.values(state.contract).some((value) => typeof value === "string" && value.trim()) ? "frame" : "request"); $("#request").value = state.request; $("#saveHint").textContent = "저장된 로컬 초안을 불러왔습니다.";
-        if (state.stage !== "request") {
-          const savedStage = state.stage;
-          openResult();
-          state.stage = savedStage;
-          if (savedStage === "handoff") { setStep("handoff"); $("#success").textContent = "✓ 준비 완료"; $("#handoffBadge").textContent = "Ready"; }
-        }
-      }
-    } catch { localStorage.removeItem(STORAGE_KEY); }
+    async function boot() {
+      await connectMcp();
+      const drafts = readDrafts();
+      const activeId = localStorage.getItem(activeDraftKey());
+      const saved = drafts.find((draft) => draft.id === activeId) || drafts.sort((left, right) => Number(right.updatedAt || 0) - Number(left.updatedAt || 0))[0];
+      if (saved) loadDraft(saved);
+      else renderRefList();
+    }
 
-    renderRefList();
-    connectMcp();
+    boot();
   </script>
 </body>
 </html>

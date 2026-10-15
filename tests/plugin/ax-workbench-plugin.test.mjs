@@ -85,6 +85,16 @@ test("plugin exposes Claude Code and Codex-compatible package metadata", () => {
   assert.doesNotMatch(skill, /work on meeting-summary/);
 });
 
+test("plugin discovery reports the current workspace scope", async () => {
+  const server = startStdioServer();
+  try {
+    const discovery = await server.request(1, "server/discover");
+    assert.equal(discovery.result.workspace, process.cwd());
+  } finally {
+    server.child.kill();
+  }
+});
+
 test("plugin read tool converts an authorized local HTML path", async () => {
   const server = startStdioServer();
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "ax-workbench-"));
