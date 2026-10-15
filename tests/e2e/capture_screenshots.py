@@ -74,6 +74,13 @@ def main():
 
             page.get_by_role("button", name="handoff 준비 완료").click()
             page.screenshot(path=OUTPUT / "03-handoff-ready.png", full_page=True)
+            page.get_by_role("button", name="초안 저장").last.click()
+            page.get_by_role("button", name="저장된 Draft").click()
+            page.get_by_role("button", name="＋ 새 Draft").click()
+            page.locator("#request").fill("두 번째 회의 자동화 Draft를 별도로 관리합니다.")
+            page.get_by_role("button", name="초안 저장").first.click()
+            page.get_by_role("button", name="저장된 Draft").click()
+            page.screenshot(path=OUTPUT / "04-saved-drafts.png", full_page=True)
             browser.close()
     finally:
         process.terminate()

@@ -141,6 +141,7 @@ E2E가 완료되면 [screenshots](./apps/workbench/demo/screenshots/)도 다시 
 | 1. 문제 입력 | [01-input-stage.png](./apps/workbench/demo/screenshots/01-input-stage.png) | 문제를 한 문장으로 입력하고 참고자료 파일을 선택한다. | 15자 미만이면 구조화하지 않고 입력 오류를 보여준다. |
 | 2. 구조화·직접 수정 | [02-structured-editing.png](./apps/workbench/demo/screenshots/02-structured-editing.png) | Step 1의 원문·참고자료를 확인하면서 5개 계약 필드를 수정한다. | 원문과 참고자료의 이름·내용이 상단 컨텍스트 및 handoff preview에 유지된다. |
 | 3. handoff 승인 | [03-handoff-ready.png](./apps/workbench/demo/screenshots/03-handoff-ready.png) | 모든 필드 검증 후 사람이 검토할 handoff를 준비한다. | `Ready`, `review-only`, `Request`, `References`, `Verification`이 포함된다. |
+| 4. 저장된 Draft 관리 | [04-saved-drafts.png](./apps/workbench/demo/screenshots/04-saved-drafts.png) | 작업 디렉터리별로 여러 Draft를 저장하고 열거나 삭제한다. | Workspace 경로와 2개 이상의 Draft가 목록에 표시된다. |
 
 ### 화면 미리보기
 
@@ -155,6 +156,10 @@ E2E가 완료되면 [screenshots](./apps/workbench/demo/screenshots/)도 다시 
 #### 3. handoff 승인
 
 ![handoff 승인 화면](./apps/workbench/demo/screenshots/03-handoff-ready.png)
+
+#### 4. 저장된 Draft 관리
+
+![저장된 Draft 관리 화면](./apps/workbench/demo/screenshots/04-saved-drafts.png)
 
 ### 기능별 동작
 
