@@ -18,6 +18,23 @@
 - 로컬 저장만 사용하며 로그인, 자동 메일, 업무 확정, 외부 업로드는 없습니다.
 - 이전의 `work on meeting-summary` 실행 명령은 사용하지 않습니다.
 
+## 기술 스택
+
+외부 서비스 없이 로컬에서 동작하는 buildless MVP로 구성했습니다.
+
+| 영역 | 기술 | 사용처 |
+|---|---|---|
+| 런타임·서버 | Node.js ES Modules, Node 표준 라이브러리 | 정적 MVP 서버와 HTTP MCP endpoint, plugin용 stdio MCP |
+| UI | HTML, CSS, Vanilla JavaScript | 문제 입력, 5-field 직접 수정, handoff, Draft 관리 화면 |
+| 브라우저 API | Fetch, File API, `localStorage` | MCP 호출, HTML/YAML 참고자료 입력, Workspace별 Draft 저장 |
+| MCP | Model Context Protocol, JSON-RPC 기반 HTTP·stdio transport | 참고자료 변환, 구조화, 검증, handoff 생성 도구 |
+| 변환 | 자체 HTML/YAML → Markdown 변환기 | `ax_read_reference`의 참고자료 Markdown 변환 |
+| Plugin | Claude Code·Codex 호환 manifest와 Skill | 동일 workflow를 Claude Code와 Codex에서 실행 |
+| 테스트 | Node `node:test`, Python `pytest`, Playwright | Unit·Integration·Plugin·E2E 검증과 화면 캡처 |
+| 문서·증거 | Markdown, PNG | 기능 설명, 실행 방법, 상태별 UI 스크린샷 |
+
+별도 프론트엔드 빌드 도구나 런타임 npm dependency는 사용하지 않습니다.
+
 ## localhost 실행
 
 프로젝트 루트에서 다음을 실행합니다.
