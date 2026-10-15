@@ -35,6 +35,48 @@
 
 별도 프론트엔드 빌드 도구나 런타임 npm dependency는 사용하지 않습니다.
 
+## ax-solve의 정의
+
+`ax-solve`는 Claude Code와 Codex에서 **어떤 문제를 풀 것인지 먼저 명세하도록 돕는 plugin**입니다.
+문제 원문과 참고자료를 `Goal`, `Constraints`, `Success criteria`, `Anti-goals`,
+`Acceptance rubric`의 5-field 계약으로 정리하고, 사용자가 직접 수정·검증한 뒤
+사람이 검토할 수 있는 `review-only` handoff 문서를 만듭니다.
+
+ax-solve의 책임은 문제를 명확하게 정의하고 실행 조건을 합의 가능한 형태로 만드는 데
+있습니다. 메일 발송, 외부 업로드, 업무 확정처럼 실제 실행에 해당하는 동작은 범위에
+포함하지 않습니다.
+
+## 문제 정의
+
+AI에게 업무를 맡기기 전 단계에는 다음 문제가 반복됩니다.
+
+| 문제 | ax-solve가 만드는 결과 |
+|---|---|
+| 요청이 모호해 무엇을 해결해야 하는지 불분명함 | 한 문장의 문제 원문과 `Goal`로 해결 대상을 고정 |
+| 참고자료가 여러 형식과 위치에 흩어져 있음 | HTML·YAML·텍스트를 Markdown으로 통일하고 출처·절대경로를 보존 |
+| 성공 여부와 하지 말아야 할 일이 암묵적임 | `Success criteria`, `Anti-goals`, `Acceptance rubric`으로 명시 |
+| AI가 만든 초안을 검토·수정하기 어려움 | 5-field를 직접 수정하고 누락 필드를 검증 |
+| 합의 전 실행되거나 결과가 추적되지 않음 | 실행하지 않는 `review-only` handoff와 Workspace별 Draft 저장 |
+
+즉, ax-solve는 “AI가 바로 실행하도록 지시하는 도구”가 아니라
+“사람과 AI가 같은 문제를 보고 있는지 확인하는 명세 도구”입니다.
+
+## Acceptance Criteria
+
+다음 조건을 모두 만족하면 현재 MVP의 핵심 기능이 완료된 것으로 봅니다.
+
+- **AC-01 문제 입력:** 사용자가 문제 원문과 참고자료를 입력·선택할 수 있다.
+- **AC-02 자료 정규화:** HTML·YAML 참고자료가 Markdown으로 변환되고, 변환된 본문을 사용자가 직접 수정할 수 있다.
+- **AC-03 출처 보존:** 참고자료의 파일명·내용·사용자가 승인한 절대경로가 구조화 화면과 handoff의 `References`에 유지된다.
+- **AC-04 직접 수정:** 사용자가 5개 계약 필드를 모두 수정할 수 있고, MCP 초안은 확정값으로 취급되지 않는다.
+- **AC-05 검증 차단:** 필수 필드가 비어 있으면 handoff 생성을 진행할 수 없다.
+- **AC-06 검토 문서:** handoff에 `Request`, `References`, `Contract`, `Verification`, `review-only` 상태가 포함된다.
+- **AC-07 Draft 관리:** 같은 Workspace에서 여러 Draft를 저장·열기·삭제할 수 있고, 새로고침 후에도 저장된 상태를 복원한다.
+- **AC-08 실행 경계:** 로그인, 외부 업로드, 자동 메일, 업무 확정 같은 외부 실행을 하지 않는다.
+- **AC-09 호환성:** 동일한 workflow를 Claude Code와 Codex plugin에서 사용할 수 있다.
+
+화면 상태별 증거와 테스트 매핑은 [기능 명세와 화면 증거](#기능-명세와-화면-증거)에 기록합니다.
+
 ## localhost 실행
 
 프로젝트 루트에서 다음을 실행합니다.
@@ -188,10 +230,16 @@ E2E가 완료되면 [screenshots](./apps/workbench/demo/screenshots/)도 다시 
 | handoff | Markdown·JSON 복사/다운로드 | 자동 실행·메일·업무 확정 없음 |
 | plugin skill | 동일한 Request·References·Contract workflow를 Claude Code/Codex에서 안내 | 검토용 문서만 생성 |
 
-## 다음 단계
+## 향후 개선 방향
 
-현재 plugin은 로컬 검토 workflow MVP입니다. 이후 필요할 때만 실제 Claude/Codex
-provider adapter, Archify exporter, 원격 MCP 배포를 별도 범위로 추가합니다.
+현재 plugin은 로컬 검토 workflow MVP입니다. 다음 순서로 확장합니다.
+
+1. **근거 추적성 강화:** 참고자료의 섹션·줄·변환 전후를 handoff에 연결해 각 판단의 근거를 확인한다.
+2. **Draft 이력과 비교:** Draft 버전, 변경 diff, 복구 기능을 추가해 수정 과정과 합의 시점을 보존한다.
+3. **실제 provider adapter:** Claude/Codex의 모델 호출을 선택적으로 연결하되, 구조화·검증·handoff 경계를 유지한다.
+4. **workflow 산출물 연결:** 검토가 끝난 계약에서 Archify diagram, acceptance checklist, 실행 계획을 생성한다.
+5. **권한·보안 강화:** 절대경로 접근 허용 목록, 민감정보 마스킹, 파일 크기·형식 정책을 제공한다.
+6. **팀 협업과 CI:** 승인된 handoff만 Git issue/PR과 연결하고, 모든 외부 변경은 명시적 사용자 승인을 거치게 한다.
 
 ## 참고한 plugin 형식
 
