@@ -79,6 +79,10 @@ http://127.0.0.1:8787/apps/workbench/demo/mvp.html
 
 ![Handoff 승인 완료](./screenshots/03-handoff-ready.png)
 
+### 4. 저장된 Draft 관리
+
+![저장된 Draft 관리](./screenshots/04-saved-drafts.png)
+
 ## 테스트 실행
 
 ```bash
